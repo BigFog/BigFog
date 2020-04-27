@@ -401,10 +401,13 @@
 
         
     <div class="post-nav">
-      <div class="post-nav-item"></div>
       <div class="post-nav-item">
-    <a href="/2018/03/03/%E6%B5%8B%E8%AF%95/" rel="next" title="这是一个测试">
-      这是一个测试 <i class="fa fa-chevron-right"></i>
+    <a href="/2018/03/03/%E6%B5%8B%E8%AF%95/" rel="prev" title="这是一个测试">
+      <i class="fa fa-chevron-left"></i> 这是一个测试
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/03/14/%E5%AE%89%E5%8D%93%E8%AE%BE%E7%BD%AE%E6%8C%89%E9%92%AE%E7%9B%91%E5%90%AC%E7%9A%84%E5%9B%9B%E7%A7%8D%E6%96%B9%E5%BC%8F/" rel="next" title="安卓设置按钮监听的四种方式">
+      安卓设置按钮监听的四种方式 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -418,6 +421,11 @@
 
           </div>
           
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zNjc1OC8xMzI5Mw=="></div>
+  </div>
+  
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -573,6 +581,22 @@
   
 
   
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
 
 </body>
 </html>

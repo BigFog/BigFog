@@ -270,8 +270,8 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2018/03/03/%E6%B5%8B%E8%AF%95/" rel="prev" title="这是一个测试">
-      <i class="fa fa-chevron-left"></i> 这是一个测试
+    <a href="/2018/03/03/%E5%AE%89%E5%8D%93%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E7%BC%96%E5%86%99/" rel="prev" title="安卓动态链接库编写">
+      <i class="fa fa-chevron-left"></i> 安卓动态链接库编写
     </a></div>
       <div class="post-nav-item">
     <a href="/2018/03/15/Xposed%E6%A1%86%E6%9E%B6%E4%BD%BF%E7%94%A8%E5%88%9D%E6%8E%A2(%E4%B8%80)/" rel="next" title="Xposed框架使用初探(一)">
@@ -289,6 +289,11 @@
 
           </div>
           
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zNjc1OC8xMzI5Mw=="></div>
+  </div>
+  
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -443,6 +448,22 @@
   
 
   
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
 
 </body>
 </html>
