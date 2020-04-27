@@ -748,7 +748,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2018-10-14 16:17:55" itemprop="dateModified" datetime="2018-10-14T16:17:55+08:00">2018-10-14</time>
+                <time title="修改时间：2020-04-27 22:59:20" itemprop="dateModified" datetime="2020-04-27T22:59:20+08:00">2020-04-27</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -784,137 +784,15 @@
 <ol>
 <li>So机制可以让开发者最大化利用已有的C和C++代码，达到重用的效果。</li>
 <li>So是二进制，没有多余开销，速度快。</li>
-<li>相对于java代码，二进制代码的反编译难度更大，所以很多核心代码都可以放在里面。这也是研究So库的一个很大原因。</li>
-</ol>
-<h3 id="NDK基础概念"><a href="#NDK基础概念" class="headerlink" title="NDK基础概念"></a>NDK基础概念</h3><blockquote>
-<p><strong>NDK</strong>:英文全称为Native Development Kit。它不是一个单独的工具，是一个包含API，交叉编译器，链接程序，调试器，构建工具，文档和示例应用程序的综合工具集。比如使用了哪个版本的C++编译，引用哪些共享库，还可以指定编译的ABI，只有有了这些NDK中的编译工具才能准确的编译C/C++代码。</p>
-</blockquote>
-<blockquote>
-<p><strong>JNI</strong>:英文全称为Java Native Interface，java本地接口。它允许java类的某些方法原生实现，但同时也能够像普通Java方法一样被调用和使用，这些原生方法也可以使用Java对象。java提供的jni与本地代码交互，极大增强了java语言的本地交互能力。</p>
-</blockquote>
-<blockquote>
-<p><strong>Cmake</strong>:是一个跨平台的编译工具，它会根据Cmakelist.txt的语言规则生成对应的Makefile或者project文件。<br>Android Studio 2.2版本之后工具增加了Cmake支持。这样编辑C/C++代码就有两种选择：</p>
-</blockquote>
-<ol>
-<li>ndk-build+Android.mk+Application.mk组合。</li>
-<li>Cmake+Cmakelist.txt组合<br>这组合只是不同的构建脚本和构建命令。对第一种了解不多，所以这篇主要使用Cmake和cmakelist.txt来编写so库。</li>
-</ol>
-<h3 id="基本数据类型"><a href="#基本数据类型" class="headerlink" title="基本数据类型"></a>基本数据类型</h3><table>
-<thead>
-<tr>
-<th align="center">java类型</th>
-<th align="center">jni类型</th>
-<th align="center">C/C++类型</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">Boolean</td>
-<td align="center">JBoolean</td>
-<td align="center">unsigned char</td>
-</tr>
-<tr>
-<td align="center">Byte</td>
-<td align="center">JByte</td>
-<td align="center">char</td>
-</tr>
-<tr>
-<td align="center">Char</td>
-<td align="center">JByte</td>
-<td align="center">unsigned short</td>
-</tr>
-<tr>
-<td align="center">Short</td>
-<td align="center">JShort</td>
-<td align="center">short</td>
-</tr>
-<tr>
-<td align="center">Int</td>
-<td align="center">JInt</td>
-<td align="center">int</td>
-</tr>
-<tr>
-<td align="center">Long</td>
-<td align="center">JLong</td>
-<td align="center">long long</td>
-</tr>
-<tr>
-<td align="center">Float</td>
-<td align="center">JFloat</td>
-<td align="center">float</td>
-</tr>
-<tr>
-<td align="center">Double</td>
-<td align="center">JDouble</td>
-<td align="center">double</td>
-</tr>
-</tbody></table>
-<h3 id="创建字符串"><a href="#创建字符串" class="headerlink" title="创建字符串"></a>创建字符串</h3><blockquote>
-<p>可以在原生代码中使用NewString函数构建Unicode编码格式的字符串实例。用NewStringUTF函数构建UTF-8编码格式的字符串实例。<br>用给定的C字符串创建java字符串</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Jstring javaString;</span><br><span class="line">javaString &#x3D;(*env)-&gt;NewStringUTF(env,&quot;hello world&quot;);</span><br></pre></td></tr></table></figure>
-<p>内存溢出，函数将返回Null会抛出异常，代码会停止。</p>
-<h3 id="java字符串转为C字符串"><a href="#java字符串转为C字符串" class="headerlink" title="java字符串转为C字符串"></a>java字符串转为C字符串</h3><p>为了在原声代码中使用java字符串，需要先将java字符串转为C字符串。<br>GetStringChars函数可以将Unicode格式的java字符串转为C字符串，用GetStringUTFChars函数可以将UTF-8格式的字符串转为C字符串。这些函数的第三个参数均为可选参数，该可选参数名是isCopy,它让调用者确定返回的C字符串地址指向副本还是指向堆中固定的对象。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">const jbyte* str;</span><br><span class="line">jboolean iscopy;</span><br><span class="line">str&#x3D;(*env)-&gt;GetStringUTFChars(env,javastring,&amp;isCopy);</span><br><span class="line">if(0!&#x3D;str)&#123;</span><br><span class="line">    printf(&quot;java string: %s&quot;,str);</span><br><span class="line">    if(JNI_TRUE&#x3D;&#x3D;isCopy)</span><br><span class="line">    &#123;</span><br><span class="line">        printf(&quot;C string is  a copy of the java string.&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    else</span><br><span class="line">    &#123;</span><br><span class="line">        printf(&quot;C string is  a copy of the java string.&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p><strong><em>划重点—–&gt;</em></strong>：通过JNI GetStringChars函数和GetStringUTFChars函数获得的C字符串在原生代码中使用完之后需要正确释放，否则会引起内存泄露。JNI提供ReleaseStringChars函数释放Unicode编码格式的字符串。而用ReleaseStringUTFChars函数释放Unicode编码格式的字符串。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(*env)-&gt;ReleaseStringUTFChars(env,javaString,str);</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>其他相关内容将在后续博客中更新。</p>
-</blockquote>
-<h2 id="动态链接库的编写"><a href="#动态链接库的编写" class="headerlink" title="动态链接库的编写"></a>动态链接库的编写</h2><h3 id="NDK和Cmake插件安装"><a href="#NDK和Cmake插件安装" class="headerlink" title="NDK和Cmake插件安装"></a>NDK和Cmake插件安装</h3><blockquote>
-<p>新建一安卓项目，勾选include C++ support.</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p1.png" alt=""></p>
-<blockquote>
-<p>一路next到结束。工程构建好后，打开File–&gt;Setting–&gt;Android SDK–&gt;SDK Tools,勾选Cmake和NDK。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p2.png" alt=""></p>
-<blockquote>
-<p>打开的工程结构，会看到有一个native-lib.cpp和cmakeList.txt。分别是代码文件和配置文件。接下来就是我们的编写过程。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p3.png" alt=""></p>
-<h3 id="代码编写"><a href="#代码编写" class="headerlink" title="代码编写"></a>代码编写</h3><blockquote>
-<p>程序设计思路是，输入一串字符，然后点击按钮去判断输入的正确与否。判断程序就是使用原生代码实现，根据返回值弹出提示正确还是错误。程序界面如下：</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p4.png" alt=""></p>
-<h4 id="新建类，用来存放check类的调用。"><a href="#新建类，用来存放check类的调用。" class="headerlink" title="新建类，用来存放check类的调用。"></a>新建类，用来存放check类的调用。</h4><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p5.png" alt=""></p>
-<blockquote>
-<p>先编写Mainactivity中的代码。因为在界面中直接使用了android:onClick=”check”。所以直接编写check按钮函数。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p6.png" alt=""></p>
-<h4 id="新建Check原生代码函数。"><a href="#新建Check原生代码函数。" class="headerlink" title="新建Check原生代码函数。"></a>新建Check原生代码函数。</h4><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p7.png" alt=""></p>
-<blockquote>
-<p>此时程序结构如下：</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p8.png" alt=""></p>
-<h4 id="原生代码编写"><a href="#原生代码编写" class="headerlink" title="原生代码编写."></a>原生代码编写.</h4><blockquote>
-<p>为了写函数方便，我们可以将native-lib.cpp中的代码粘贴过来进行修改。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p9.png" alt=""></p>
-<h4 id="CmakeList-txt配置文件更改"><a href="#CmakeList-txt配置文件更改" class="headerlink" title="CmakeList.txt配置文件更改"></a>CmakeList.txt配置文件更改</h4><blockquote>
-<p>TODO 设置构建本机库文件所需的 CMake的最小版本<br>cmake_minimum_required(VERSION 3.4.1)</p>
-</blockquote>
-<blockquote>
-<p>TODO 添加自己写的 C/C++源文件<br>add_library( Check<br>             SHARED<br>             src/main/cpp/Check.cpp )</p>
-</blockquote>
-<blockquote>
-<p>TODO 依赖 NDK中的库<br>find_library( log-lib<br>              log )</p>
-</blockquote>
-<blockquote>
-<p>TODO 将目标库与 NDK中的库进行连接<br>target_link_libraries( Check<br>                       ${log-lib} )<br>配置结束后就可以运行，看下效果。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p10.png" alt=""><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p11.png" alt=""></p>
-<h4 id="So文件的查看"><a href="#So文件的查看" class="headerlink" title="So文件的查看"></a>So文件的查看</h4><blockquote>
-<p>将apk拷贝出来，解压查看lib文件</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p12.png" alt=""><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p13.png" alt=""></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
-<p>这是一次简单的尝试，本想把so文件的调试也写在后面，但篇幅就太长了，待日后再更新。</p>
-</blockquote>
-<p>个人拙见，如有错误可指正，欢迎留言交流。</p>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://www.52pojie.cn/thread-704056-1-1.html" target="_blank" rel="noopener">https://www.52pojie.cn/thread-704056-1-1.html</a><br><a href="https://blog.csdn.net/jiangwei0910410003/article/details/51500328" target="_blank" rel="noopener">https://blog.csdn.net/jiangwei0910410003/article/details/51500328</a><br><a href="https://www.cnblogs.com/liushilin/p/6292263.html#_label2" target="_blank" rel="noopener">https://www.cnblogs.com/liushilin/p/6292263.html#_label2</a><br><a href="https://www.jianshu.com/p/6332418b12b1" target="_blank" rel="noopener">https://www.jianshu.com/p/6332418b12b1</a><br><a href="https://blog.csdn.net/zeqiao/article/details/77893167" target="_blank" rel="noopener">https://blog.csdn.net/zeqiao/article/details/77893167</a></p>
-
+<li>相对于java代码，二进制代码的反编译难度更大，所以很多核心代码都可以放在里面。这也是研究So库的一个很大原因。
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2018/03/03/%E5%AE%89%E5%8D%93%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E7%BC%96%E5%86%99/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
