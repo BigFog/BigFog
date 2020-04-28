@@ -1,23 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>这是一个测试</title>
-    <url>/2018/03/03/%E6%B5%8B%E8%AF%95/</url>
-    <content><![CDATA[<h2 id="加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看-我的小窝"><a href="#加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看-我的小窝" class="headerlink" title="加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝"></a>加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</h2><p>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，<br>在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</p>
-<a id="more"></a>
-
-<p>加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，<br>在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</p>
-]]></content>
-      <categories>
-        <category>恶意代码分析</category>
-      </categories>
-      <tags>
-        <tag>标签1</tag>
-        <tag>标签2</tag>
-        <tag>标签3</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Hello World</title>
     <url>/2020/04/26/hello-world/</url>
     <content><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
@@ -34,40 +17,6 @@
 
 <p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
 ]]></content>
-  </entry>
-  <entry>
-    <title>安卓设置按钮监听的四种方式</title>
-    <url>/2018/03/14/%E5%AE%89%E5%8D%93%E8%AE%BE%E7%BD%AE%E6%8C%89%E9%92%AE%E7%9B%91%E5%90%AC%E7%9A%84%E5%9B%9B%E7%A7%8D%E6%96%B9%E5%BC%8F/</url>
-    <content><![CDATA[<p>这里的布局文件就很简单。只是一个简单的按钮。ID为button1。</p>
-<p>第一种：</p>
-<p>1.找到按钮的Id.</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">button.setOnClickListener(this);</span><br><span class="line">但this指的是当前的activity,会报错。ALT+enter键实现View.OnClickListener接口。会自动实现click方法。源码如下：</span><br><span class="line">public class MainActivity extends AppCompatActivity implements View.OnClickListener &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(this);</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public void onClick(View v) &#123;</span><br><span class="line">        Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>第二种：</p>
-<blockquote>
-<p>同样需要找到按钮的Id<br>Button button= (Button) findViewById(R.id.button1);<br>利用button设置监听，并实现onclick方法。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(new View.OnClickListener() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void onClick(View v) &#123;</span><br><span class="line">                Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>第三种：</p>
-<blockquote>
-<p>这种方法要通过布局文件来实现。在&lt;Button 内容/&gt;中添加android:onclick=”click123”。click123可任意设定，是要实现的方法名。<br>然后在Mainactivity中实现click123方法。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">    &#125;</span><br><span class="line">    public void click123(View v)&#123;</span><br><span class="line">        Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>第四种：</p>
-<blockquote>
-<p>以内部类的方式来实现。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(new myclick());</span><br><span class="line">    &#125;</span><br><span class="line">    class myclick implements View.OnClickListener&#123;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        public void onClick(View v) &#123;</span><br><span class="line">            Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-]]></content>
-      <categories>
-        <category>编程开发</category>
-        <category>Android</category>
-      </categories>
-      <tags>
-        <tag>安卓</tag>
-        <tag>监听</tag>
-      </tags>
   </entry>
   <entry>
     <title>Xposed框架使用初探(一)</title>
@@ -306,6 +255,57 @@
       <tags>
         <tag>安卓</tag>
         <tag>NDK</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>安卓设置按钮监听的四种方式</title>
+    <url>/2018/03/14/%E5%AE%89%E5%8D%93%E8%AE%BE%E7%BD%AE%E6%8C%89%E9%92%AE%E7%9B%91%E5%90%AC%E7%9A%84%E5%9B%9B%E7%A7%8D%E6%96%B9%E5%BC%8F/</url>
+    <content><![CDATA[<p>这里的布局文件就很简单。只是一个简单的按钮。ID为button1。</p>
+<p>第一种：</p>
+<p>1.找到按钮的Id.</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">button.setOnClickListener(this);</span><br><span class="line">但this指的是当前的activity,会报错。ALT+enter键实现View.OnClickListener接口。会自动实现click方法。源码如下：</span><br><span class="line">public class MainActivity extends AppCompatActivity implements View.OnClickListener &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(this);</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public void onClick(View v) &#123;</span><br><span class="line">        Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第二种：</p>
+<blockquote>
+<p>同样需要找到按钮的Id<br>Button button= (Button) findViewById(R.id.button1);<br>利用button设置监听，并实现onclick方法。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(new View.OnClickListener() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void onClick(View v) &#123;</span><br><span class="line">                Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第三种：</p>
+<blockquote>
+<p>这种方法要通过布局文件来实现。在&lt;Button 内容/&gt;中添加android:onclick=”click123”。click123可任意设定，是要实现的方法名。<br>然后在Mainactivity中实现click123方法。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">    &#125;</span><br><span class="line">    public void click123(View v)&#123;</span><br><span class="line">        Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第四种：</p>
+<blockquote>
+<p>以内部类的方式来实现。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(new myclick());</span><br><span class="line">    &#125;</span><br><span class="line">    class myclick implements View.OnClickListener&#123;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        public void onClick(View v) &#123;</span><br><span class="line">            Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+]]></content>
+      <categories>
+        <category>编程开发</category>
+        <category>Android</category>
+      </categories>
+      <tags>
+        <tag>安卓</tag>
+        <tag>监听</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>这是一个测试</title>
+    <url>/2018/03/03/%E6%B5%8B%E8%AF%95/</url>
+    <content><![CDATA[<h2 id="加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看-我的小窝"><a href="#加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看-我的小窝" class="headerlink" title="加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝"></a>加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</h2><p>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，<br>在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</p>
+<a id="more"></a>
+
+<p>加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，<br>在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</p>
+]]></content>
+      <categories>
+        <category>恶意代码分析</category>
+      </categories>
+      <tags>
+        <tag>标签1</tag>
+        <tag>标签2</tag>
+        <tag>标签3</tag>
       </tags>
   </entry>
   <entry>
