@@ -248,14 +248,6 @@
           <h2 id="漏洞描述"><a href="#漏洞描述" class="headerlink" title="漏洞描述"></a>漏洞描述</h2><blockquote>
 <p>CVE-2011-0104是microsoft excel在解析XLB文件时导致的一个溢出。xlb文件是Excel表格里面的一个设置文件，通常记录用户的操作，并非恶意文件。溢出可导致执行任意代码。本文在分析漏洞的基础上，简单利用漏洞弹出计算器。</p>
 </blockquote>
-<h2 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h2><blockquote>
-<p>系统：Windows xp pro sp2<br>软件：windows office 2003<br>调试器：immunity Debugger<br>Poc生成：漏洞战争配套资料</p>
-</blockquote>
-<h2 id="调试分析"><a href="#调试分析" class="headerlink" title="调试分析"></a>调试分析</h2><ul>
-<li>打开一个空白的excel程序</li>
-<li>打开immunity Debugger,附加excel进程</li>
-<li>按下F9将程序运行起来。</li>
-<li>在打开的excel中使用file–&gt;open打开配套资料中的exploit.xlb文件。
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2018/07/25/CVE-2011-0104%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/#more" rel="contents">
