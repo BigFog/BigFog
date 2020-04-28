@@ -1,479 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Hello World</title>
-    <url>/2020/04/26/hello-world/</url>
-    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
-]]></content>
-  </entry>
-  <entry>
-    <title>安卓动态链接库编写</title>
-    <url>/2018/03/03/%E5%AE%89%E5%8D%93%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E7%BC%96%E5%86%99/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
-<p>实习时曾经用真机进行过so文件的调试。这次使用的模拟器，过程和原先也一样，但到断点处就是运行不起来。熬了二个晚上，终于发现模拟器不支持arm的so的调试。要模拟器调试so的话只能选择x86版本的so。通过gdb开端口来调试，弄下来很复杂。这篇文章简单介绍下安卓中So文件的编写，以及对so文件的调试。</p>
+    <title>CVE-2011-0104漏洞分析</title>
+    <url>/2018/07/25/CVE-2011-0104%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<h2 id="漏洞描述"><a href="#漏洞描述" class="headerlink" title="漏洞描述"></a>漏洞描述</h2><blockquote>
+<p>CVE-2011-0104是microsoft excel在解析XLB文件时导致的一个溢出。xlb文件是Excel表格里面的一个设置文件，通常记录用户的操作，并非恶意文件。溢出可导致执行任意代码。本文在分析漏洞的基础上，简单利用漏洞弹出计算器。</p>
 </blockquote>
-<h2 id="相关知识介绍"><a href="#相关知识介绍" class="headerlink" title="相关知识介绍"></a>相关知识介绍</h2><blockquote>
-<p>在安卓程序中为什么要使用So库？</p>
+<h2 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h2><blockquote>
+<p>系统：Windows xp pro sp2<br>软件：windows office 2003<br>调试器：immunity Debugger<br>Poc生成：漏洞战争配套资料</p>
 </blockquote>
-<ol>
-<li>So机制可以让开发者最大化利用已有的C和C++代码，达到重用的效果。</li>
-<li>So是二进制，没有多余开销，速度快。</li>
-<li>相对于java代码，二进制代码的反编译难度更大，所以很多核心代码都可以放在里面。这也是研究So库的一个很大原因。<a id="more"></a>
-<h3 id="NDK基础概念"><a href="#NDK基础概念" class="headerlink" title="NDK基础概念"></a>NDK基础概念</h3><blockquote>
-<p><strong>NDK</strong>:英文全称为Native Development Kit。它不是一个单独的工具，是一个包含API，交叉编译器，链接程序，调试器，构建工具，文档和示例应用程序的综合工具集。比如使用了哪个版本的C++编译，引用哪些共享库，还可以指定编译的ABI，只有有了这些NDK中的编译工具才能准确的编译C/C++代码。</p>
+<h2 id="调试分析"><a href="#调试分析" class="headerlink" title="调试分析"></a>调试分析</h2><ul>
+<li>打开一个空白的excel程序</li>
+<li>打开immunity Debugger,附加excel进程</li>
+<li>按下F9将程序运行起来。</li>
+<li>在打开的excel中使用file–&gt;open打开配套资料中的exploit.xlb文件。<a id="more"></a>
+<blockquote>
+<p>异常触发：</p>
 </blockquote>
 </li>
-</ol>
-<blockquote>
-<p><strong>JNI</strong>:英文全称为Java Native Interface，java本地接口。它允许java类的某些方法原生实现，但同时也能够像普通Java方法一样被调用和使用，这些原生方法也可以使用Java对象。java提供的jni与本地代码交互，极大增强了java语言的本地交互能力。</p>
-</blockquote>
-<blockquote>
-<p><strong>Cmake</strong>:是一个跨平台的编译工具，它会根据Cmakelist.txt的语言规则生成对应的Makefile或者project文件。<br>Android Studio 2.2版本之后工具增加了Cmake支持。这样编辑C/C++代码就有两种选择：</p>
-</blockquote>
-<ol>
-<li>ndk-build+Android.mk+Application.mk组合。</li>
-<li>Cmake+Cmakelist.txt组合<br>这组合只是不同的构建脚本和构建命令。对第一种了解不多，所以这篇主要使用Cmake和cmakelist.txt来编写so库。</li>
-</ol>
-<h3 id="基本数据类型"><a href="#基本数据类型" class="headerlink" title="基本数据类型"></a>基本数据类型</h3><table>
-<thead>
-<tr>
-<th align="center">java类型</th>
-<th align="center">jni类型</th>
-<th align="center">C/C++类型</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">Boolean</td>
-<td align="center">JBoolean</td>
-<td align="center">unsigned char</td>
-</tr>
-<tr>
-<td align="center">Byte</td>
-<td align="center">JByte</td>
-<td align="center">char</td>
-</tr>
-<tr>
-<td align="center">Char</td>
-<td align="center">JByte</td>
-<td align="center">unsigned short</td>
-</tr>
-<tr>
-<td align="center">Short</td>
-<td align="center">JShort</td>
-<td align="center">short</td>
-</tr>
-<tr>
-<td align="center">Int</td>
-<td align="center">JInt</td>
-<td align="center">int</td>
-</tr>
-<tr>
-<td align="center">Long</td>
-<td align="center">JLong</td>
-<td align="center">long long</td>
-</tr>
-<tr>
-<td align="center">Float</td>
-<td align="center">JFloat</td>
-<td align="center">float</td>
-</tr>
-<tr>
-<td align="center">Double</td>
-<td align="center">JDouble</td>
-<td align="center">double</td>
-</tr>
-</tbody></table>
-<h3 id="创建字符串"><a href="#创建字符串" class="headerlink" title="创建字符串"></a>创建字符串</h3><blockquote>
-<p>可以在原生代码中使用NewString函数构建Unicode编码格式的字符串实例。用NewStringUTF函数构建UTF-8编码格式的字符串实例。<br>用给定的C字符串创建java字符串</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Jstring javaString;</span><br><span class="line">javaString &#x3D;(*env)-&gt;NewStringUTF(env,&quot;hello world&quot;);</span><br></pre></td></tr></table></figure>
-<p>内存溢出，函数将返回Null会抛出异常，代码会停止。</p>
-<h3 id="java字符串转为C字符串"><a href="#java字符串转为C字符串" class="headerlink" title="java字符串转为C字符串"></a>java字符串转为C字符串</h3><p>为了在原声代码中使用java字符串，需要先将java字符串转为C字符串。<br>GetStringChars函数可以将Unicode格式的java字符串转为C字符串，用GetStringUTFChars函数可以将UTF-8格式的字符串转为C字符串。这些函数的第三个参数均为可选参数，该可选参数名是isCopy,它让调用者确定返回的C字符串地址指向副本还是指向堆中固定的对象。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">const jbyte* str;</span><br><span class="line">jboolean iscopy;</span><br><span class="line">str&#x3D;(*env)-&gt;GetStringUTFChars(env,javastring,&amp;isCopy);</span><br><span class="line">if(0!&#x3D;str)&#123;</span><br><span class="line">    printf(&quot;java string: %s&quot;,str);</span><br><span class="line">    if(JNI_TRUE&#x3D;&#x3D;isCopy)</span><br><span class="line">    &#123;</span><br><span class="line">        printf(&quot;C string is  a copy of the java string.&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    else</span><br><span class="line">    &#123;</span><br><span class="line">        printf(&quot;C string is  a copy of the java string.&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p><strong><em>划重点—–&gt;</em></strong>：通过JNI GetStringChars函数和GetStringUTFChars函数获得的C字符串在原生代码中使用完之后需要正确释放，否则会引起内存泄露。JNI提供ReleaseStringChars函数释放Unicode编码格式的字符串。而用ReleaseStringUTFChars函数释放Unicode编码格式的字符串。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">(*env)-&gt;ReleaseStringUTFChars(env,javaString,str);</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>其他相关内容将在后续博客中更新。</p>
-</blockquote>
-<h2 id="动态链接库的编写"><a href="#动态链接库的编写" class="headerlink" title="动态链接库的编写"></a>动态链接库的编写</h2><h3 id="NDK和Cmake插件安装"><a href="#NDK和Cmake插件安装" class="headerlink" title="NDK和Cmake插件安装"></a>NDK和Cmake插件安装</h3><blockquote>
-<p>新建一安卓项目，勾选include C++ support.</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p1.png" alt=""></p>
-<blockquote>
-<p>一路next到结束。工程构建好后，打开File–&gt;Setting–&gt;Android SDK–&gt;SDK Tools,勾选Cmake和NDK。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p2.png" alt=""></p>
-<blockquote>
-<p>打开的工程结构，会看到有一个native-lib.cpp和cmakeList.txt。分别是代码文件和配置文件。接下来就是我们的编写过程。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p3.png" alt=""></p>
-<h3 id="代码编写"><a href="#代码编写" class="headerlink" title="代码编写"></a>代码编写</h3><blockquote>
-<p>程序设计思路是，输入一串字符，然后点击按钮去判断输入的正确与否。判断程序就是使用原生代码实现，根据返回值弹出提示正确还是错误。程序界面如下：</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p4.png" alt=""></p>
-<h4 id="新建类，用来存放check类的调用。"><a href="#新建类，用来存放check类的调用。" class="headerlink" title="新建类，用来存放check类的调用。"></a>新建类，用来存放check类的调用。</h4><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p5.png" alt=""></p>
-<blockquote>
-<p>先编写Mainactivity中的代码。因为在界面中直接使用了android:onClick=”check”。所以直接编写check按钮函数。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p6.png" alt=""></p>
-<h4 id="新建Check原生代码函数。"><a href="#新建Check原生代码函数。" class="headerlink" title="新建Check原生代码函数。"></a>新建Check原生代码函数。</h4><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p7.png" alt=""></p>
-<blockquote>
-<p>此时程序结构如下：</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p8.png" alt=""></p>
-<h4 id="原生代码编写"><a href="#原生代码编写" class="headerlink" title="原生代码编写."></a>原生代码编写.</h4><blockquote>
-<p>为了写函数方便，我们可以将native-lib.cpp中的代码粘贴过来进行修改。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p9.png" alt=""></p>
-<h4 id="CmakeList-txt配置文件更改"><a href="#CmakeList-txt配置文件更改" class="headerlink" title="CmakeList.txt配置文件更改"></a>CmakeList.txt配置文件更改</h4><blockquote>
-<p>TODO 设置构建本机库文件所需的 CMake的最小版本<br>cmake_minimum_required(VERSION 3.4.1)</p>
-</blockquote>
-<blockquote>
-<p>TODO 添加自己写的 C/C++源文件<br>add_library( Check<br>             SHARED<br>             src/main/cpp/Check.cpp )</p>
-</blockquote>
-<blockquote>
-<p>TODO 依赖 NDK中的库<br>find_library( log-lib<br>              log )</p>
-</blockquote>
-<blockquote>
-<p>TODO 将目标库与 NDK中的库进行连接<br>target_link_libraries( Check<br>                       ${log-lib} )<br>配置结束后就可以运行，看下效果。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p10.png" alt=""><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p11.png" alt=""></p>
-<h4 id="So文件的查看"><a href="#So文件的查看" class="headerlink" title="So文件的查看"></a>So文件的查看</h4><blockquote>
-<p>将apk拷贝出来，解压查看lib文件</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p12.png" alt=""><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180329/p13.png" alt=""></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
-<p>这是一次简单的尝试，本想把so文件的调试也写在后面，但篇幅就太长了，待日后再更新。</p>
-</blockquote>
-<p>个人拙见，如有错误可指正，欢迎留言交流。</p>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://www.52pojie.cn/thread-704056-1-1.html" target="_blank" rel="noopener">https://www.52pojie.cn/thread-704056-1-1.html</a><br><a href="https://blog.csdn.net/jiangwei0910410003/article/details/51500328" target="_blank" rel="noopener">https://blog.csdn.net/jiangwei0910410003/article/details/51500328</a><br><a href="https://www.cnblogs.com/liushilin/p/6292263.html#_label2" target="_blank" rel="noopener">https://www.cnblogs.com/liushilin/p/6292263.html#_label2</a><br><a href="https://www.jianshu.com/p/6332418b12b1" target="_blank" rel="noopener">https://www.jianshu.com/p/6332418b12b1</a><br><a href="https://blog.csdn.net/zeqiao/article/details/77893167" target="_blank" rel="noopener">https://blog.csdn.net/zeqiao/article/details/77893167</a></p>
-]]></content>
-      <categories>
-        <category>编程开发</category>
-        <category>Android</category>
-      </categories>
-      <tags>
-        <tag>安卓</tag>
-        <tag>NDK</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Xposed框架使用初探(一)</title>
-    <url>/2018/03/15/Xposed%E6%A1%86%E6%9E%B6%E4%BD%BF%E7%94%A8%E5%88%9D%E6%8E%A2(%E4%B8%80)/</url>
-    <content><![CDATA[<h2 id="Hook简介"><a href="#Hook简介" class="headerlink" title="Hook简介"></a>Hook简介</h2><blockquote>
-<p>Hook英文翻译即为钩子。windows下的Hook是一种消息处理机制。每当特定的消息发出，在没有到达目的窗口前，钩子程序就先捕获该消息，即钩子函数先得到控制权，这时钩子函数就可以对消息进行加工处理。它其实是一个处理消息的程序段。当然在安卓系统中也有Hook技术，和windows下的Hook类似，也是在事件传送到终点前截获并监控事件的传输，并对所钩上的事件作出相应的处理。</p>
-</blockquote>
-<h2 id="xposed框架"><a href="#xposed框架" class="headerlink" title="xposed框架"></a>xposed框架</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><blockquote>
-<p>Xposed框架是一款对安卓平台的HOOK框架，可以在不修改APK的情况下修改程序的框架服务。通过替换/system/bin/app_process程序控制Zygote进程，从而使app_process在启动过程中加载XposedBridge.jar这个jar包。Zygote进程在启动过程中，会创建一个Dalvik虚拟机实例，还会把java运行时库加载到进程中来，以及注册一些Android核心类的JNI方法来前面创建的Dalvik虚拟机实例中去，应用程序进程会与Zygote一起共享Java运行时库。这就是XposedBridge.jar包可以加载的原因。</p>
-</blockquote>
-<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><blockquote>
-<p>Xposed框架本质只是一个apk应用，可安装到手机。相应模块(Hook代码)就需要我们去编写，模块也是apk文件。</p>
-</blockquote>
-<ol>
-<li><p>手机必须是具有Root权限的。Root是有一定风险的。所以这里使用的是模拟器。</p>
-</li>
-<li><p>实验设备：夜神模拟器+Android4.4.2+XposedInstall.apk(v2.7)+XposedBridge.jar-54。</p>
-</li>
-<li><p>Xposed框架安装效果如下：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p1.png" alt="效果图-1"></p>
-<h2 id="Xposed使用示例"><a href="#Xposed使用示例" class="headerlink" title="Xposed使用示例"></a>Xposed使用示例</h2><h3 id="需要被Hook的程序"><a href="#需要被Hook的程序" class="headerlink" title="需要被Hook的程序"></a>需要被Hook的程序</h3><blockquote>
-<p>程序界面如下</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p2.png" alt="界面-2"></p>
-<blockquote>
-<p>源代码如下:</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p3.jpg" alt="源代码-3"></p>
-<blockquote>
-<p>源代码逻辑很简单，输入一段字符串，然后在compare函数中比较。根据返回值判断输入是否正确。因为这只是做一个示例，compare函数中直接用了equals函数来比较。在代码编程中这是很愚蠢的做法，强烈不建议这种写法。<br>如果想让程序返回正确的值，只要将compare的返回值为true即可。我们这里Hook的就是compare函数，不管输入任意字符，都会显示返回成功。</p>
-</blockquote>
-<h3 id="Hook关键函数介绍"><a href="#Hook关键函数介绍" class="headerlink" title="Hook关键函数介绍"></a>Hook关键函数介绍</h3><blockquote>
-<p>IXposedHookLoadPackage类：加载回调接口，在Xposed入口类继承，实现handleLoadPackage方法。<br>handleLoadPackage：这个方法用于在加载应用程序的包的时候执行用户的操作。<br>findAndHookMethod(String className, ClassLoader classLoader, String methodName, Object… parameterTypesAndCallback) hook一个类中的方法<br>参数:<br>className: 要hook的方法的所在类<br>classloader: 要hook的包的classLoader，一般都写loadPackageParam.classLoader<br>methodName: 要hook的方法<br>parameterTypesAndCallback: 方法的参数和监听器。</p>
-</blockquote>
-<h3 id="导入lib文件"><a href="#导入lib文件" class="headerlink" title="导入lib文件"></a>导入lib文件</h3><blockquote>
-<p>新建安卓项目，这个应该很简单。需要导入jar文件-XposedBridgeApi-54.jar。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p4.png" alt="结构图-4"></p>
-</li>
-</ol>
-<blockquote>
-<p>新建文件夹，命名为lib,然后将XposedBridgeApi-54.jar复制过来。右键Add as library。这样就能看到里面的类了。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p5.png" alt="结构图-5"></p>
-<blockquote>
-<p>然后修改build.gradle文件，将compile改为provided。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p6.jpg" alt="结构图-6"></p>
-<h3 id="AndroidManifest-xml文件修改"><a href="#AndroidManifest-xml文件修改" class="headerlink" title="AndroidManifest.xml文件修改"></a>AndroidManifest.xml文件修改</h3><p>需要在配置文件中添加一些属性。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;application&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedmodule&quot; android:value&#x3D;&quot;true&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposeddescription&quot; android:value&#x3D;&quot;模块第一次测试&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedminversion&quot; android:value&#x3D;&quot;54&quot;&#x2F;&gt;</span><br><span class="line">&lt;&#x2F;application&gt;</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>xposedmodule:判断是否是xposed模块，xposed根据这个来判断是否是模块。<br>xposeddescription：模块描述，会显示在xposed框架模块列表中。<br>xposedminversion：最低xposed版本号，lib文件名可知。</p>
-</blockquote>
-<h3 id="入口类编写"><a href="#入口类编写" class="headerlink" title="入口类编写"></a>入口类编写</h3><blockquote>
-<p>创建一个类，实现IXposedHookLoadPackage借口，重写handLoadPackage方法，这里创建了一个xposedmain类。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class xposedmain implements IXposedHookLoadPackage &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam Param) throws Throwable &#123;</span><br><span class="line">        if(Param.packageName.equals(&quot;com.example.zzwbi.check&quot;))&#x2F;&#x2F;匹配包名</span><br><span class="line">        &#123;</span><br><span class="line">            XposedBridge.log(&quot;Loaded APP:&quot;+Param.packageName);&#x2F;&#x2F;XposedBridge.log相当于日志输出。</span><br><span class="line">            try &#123;</span><br><span class="line">                findAndHookMethod(&quot;com.example.zzwbi.check.MainActivity&quot;, Param.classLoader, &quot;compare&quot;, String.class, new get_True());</span><br><span class="line">                                  &#x2F;&#x2F;类名，一般都写Param.classLoader,方法名，参数...,hook的方法</span><br><span class="line">            &#125; catch (Exception e) &#123;</span><br><span class="line">                XposedBridge.log(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">class get_True extends XC_MethodHook &#123;</span><br><span class="line">    protected void beforeHookedMethod(XC_MethodHook.MethodHookParam param) throws Throwable &#123;</span><br><span class="line">        XposedBridge.log(&quot;beforeHookedMethod userName:&quot; + param.args[0]);</span><br><span class="line">        &#x2F;&#x2F;hook前的一些操作</span><br><span class="line">    &#125;</span><br><span class="line">    protected void afterHookedMethod(XC_MethodHook.MethodHookParam args) throws Throwable &#123;</span><br><span class="line">        &#x2F;&#x2F;hook后的一些操作</span><br><span class="line">        args.setResult(true);</span><br><span class="line">        XposedBridge.log(&quot;使返回值为true&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="设置启动入口"><a href="#设置启动入口" class="headerlink" title="设置启动入口"></a>设置启动入口</h3><blockquote>
-<p>新建assets文件夹,在里面新建文件名为xposed_init,写入你自己创建的xposedmain类包名。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p7.png" alt="启动入口-7"></p>
-<blockquote>
-<p>包名+类名</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p8.png" alt="示意图-8"></p>
-<h3 id="安装激活插件"><a href="#安装激活插件" class="headerlink" title="安装激活插件"></a>安装激活插件</h3><blockquote>
-<p>将apk安装到模拟器上，重启后即可看到插件效果。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p9.png" alt="启用插件-9"></p>
-<blockquote>
-<p>下面看下hook效果</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p10.png" alt="Hook成功-10"></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
-<p>这只是对于Xposed学习的一次小尝试。对于其Hook还有很多地方要学习。例如静态field变量,隐藏函数，内部类，匿名内部类，构造函数的Hook都要继续研究。</p>
-</blockquote>
-<p>####参考链接:<br><a href="http://blog.csdn.net/jiabailong/article/details/52368002" target="_blank" rel="noopener">http://blog.csdn.net/jiabailong/article/details/52368002</a><br> <a href="http://blog.csdn.net/wxyyxc1992/article/details/17320911" target="_blank" rel="noopener">http://blog.csdn.net/wxyyxc1992/article/details/17320911</a><br><a href="http://www.freebuf.com/articles/terminal/114910.html" target="_blank" rel="noopener">http://www.freebuf.com/articles/terminal/114910.html</a></p>
-]]></content>
-      <categories>
-        <category>编程开发</category>
-        <category>Android</category>
-      </categories>
-      <tags>
-        <tag>安卓</tag>
-        <tag>Xposed</tag>
-        <tag>基础</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>安卓设置按钮监听的四种方式</title>
-    <url>/2018/03/14/%E5%AE%89%E5%8D%93%E8%AE%BE%E7%BD%AE%E6%8C%89%E9%92%AE%E7%9B%91%E5%90%AC%E7%9A%84%E5%9B%9B%E7%A7%8D%E6%96%B9%E5%BC%8F/</url>
-    <content><![CDATA[<p>这里的布局文件就很简单。只是一个简单的按钮。ID为button1。</p>
-<p>第一种：</p>
-<p>1.找到按钮的Id.</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">button.setOnClickListener(this);</span><br><span class="line">但this指的是当前的activity,会报错。ALT+enter键实现View.OnClickListener接口。会自动实现click方法。源码如下：</span><br><span class="line">public class MainActivity extends AppCompatActivity implements View.OnClickListener &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(this);</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public void onClick(View v) &#123;</span><br><span class="line">        Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>第二种：</p>
-<blockquote>
-<p>同样需要找到按钮的Id<br>Button button= (Button) findViewById(R.id.button1);<br>利用button设置监听，并实现onclick方法。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(new View.OnClickListener() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void onClick(View v) &#123;</span><br><span class="line">                Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>第三种：</p>
-<blockquote>
-<p>这种方法要通过布局文件来实现。在&lt;Button 内容/&gt;中添加android:onclick=”click123”。click123可任意设定，是要实现的方法名。<br>然后在Mainactivity中实现click123方法。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">    &#125;</span><br><span class="line">    public void click123(View v)&#123;</span><br><span class="line">        Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>第四种：</p>
-<blockquote>
-<p>以内部类的方式来实现。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(new myclick());</span><br><span class="line">    &#125;</span><br><span class="line">    class myclick implements View.OnClickListener&#123;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        public void onClick(View v) &#123;</span><br><span class="line">            Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-]]></content>
-      <categories>
-        <category>编程开发</category>
-        <category>Android</category>
-      </categories>
-      <tags>
-        <tag>安卓</tag>
-        <tag>监听</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>安卓反调试检测技术</title>
-    <url>/2018/05/28/%E5%AE%89%E5%8D%93%E5%8F%8D%E8%B0%83%E8%AF%95%E6%A3%80%E6%B5%8B%E6%8A%80%E6%9C%AF/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
-<p>反调试在代码保护中扮演者重要的角色。逆向人员人员拿到apk后会对其反编译，阅读易读的java代码,有必要还会对其进行动态调试。反调试虽然不能完全阻止程序被逆向。但能一定程度上增大分析的难度。本文从四个层面对一些反调试的方法进行了说明。随着技术的日新月异，肯定还会有新的方法不断涌现。</p>
-</blockquote>
-<h2 id="Java层面保护"><a href="#Java层面保护" class="headerlink" title="Java层面保护"></a>Java层面保护</h2><h3 id="代码混淆技术"><a href="#代码混淆技术" class="headerlink" title="代码混淆技术"></a>代码混淆技术</h3><blockquote>
-<p>因为分析native代码难度较大，可以有效的保护程序。但一些开发者不具备C/C++编程基础，就可以考虑下使用代码混淆技术了。java语言编写的代码很容易被反编译，所以安卓的SDK中加入了Proguard代码混淆工具，开发人员可以使用该工具对代码进行混淆。<br>ProGuard是一个压缩、优化和混淆Java字节码文件的免费的工具，它可以删除无用的类、字段、方法和属性。可以删除没用的注释，最大限度地优化字节码文件。它还可以使用简短的无意义的名称来重命名已经存在的类、字段、方法和属性。常常用于Android开发用于混淆最终的项目，增加项目被反编译的难度。<br><strong>这里只是对Proguard作简单介绍，具体操作可自行百度</strong></p>
-</blockquote>
-<h3 id="调试器检测"><a href="#调试器检测" class="headerlink" title="调试器检测"></a>调试器检测</h3><ul>
-<li>isDebuggerConnected():安卓系统在android.os.Debug类中提供了isDebuggerConected()方法，用于检测是否有调试器链接。返回值为true则表示被调试。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">if(android.os.Debug.isDebuggerConnected()&#x3D;&#x3D;0)</span><br><span class="line">&#123;</span><br><span class="line">    android.os.Process.killProcess(android.os.Process.myPid());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li>检测android:debuggable=”false”属性。可以通过在AndroidManifest文件的application中加入android:debuggable=”false”使程序禁止调试。因为程序要调试的话需要将属性值改为”true”。因此可以在代码中检测这个属性的值，来判断程序是否被修改过。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">if(getApplicationInfo().flags&amp;&#x3D;ApplicationInfo.FLAG_DEBUGGABLE!&#x3D;0)</span><br><span class="line">&#123;</span><br><span class="line">   system.out.println(&quot;Debug&quot;);</span><br><span class="line">   android.os.Process.killProcess(android.os.Process.myPid());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="Native层面"><a href="#Native层面" class="headerlink" title="Native层面"></a>Native层面</h2><h3 id="Ptrace自身进程"><a href="#Ptrace自身进程" class="headerlink" title="Ptrace自身进程"></a>Ptrace自身进程</h3>Ptrace函数原型为：<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">int ptrace(int request,int pid,int addr,int data)</span><br></pre></td></tr></table></figure></li>
-<li>第一个参数指示了ptrace要执行的命令</li>
-<li>第二个参数指示了ptrace要跟踪的进程</li>
-<li>第三个参数指示了要监控的内存地址</li>
-<li>第四个参数指示了存放读取出的或者要写入的数据。</li>
 </ul>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/1.png" alt="cve-2011-0104"></p>
 <blockquote>
-<p>ptrace可以提供父进程观察和控制子进程的能力。当使用ptrace跟踪后，所有发送给被跟踪的子进程的信号都转发给父进程，而子进程则会被阻塞。这时子进程的状态就会被标注为TASK_TRACED。而父进程收到信号后就可以对停止下来的子进程进行检查和修改，然后让子进程继续运行。ptrace有一个很重要的特性 ：一个进程只能被一个进程调试。根据这个特点，只需要在自己的进程调用ptrace就能一定程度上阻止被其他调试器调试。</p>
+<p>可以看到异常是一个访问异常。这时要查找异常产生的源头。向上查看代码，重点关注</p>
 </blockquote>
-<hr>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">push ebp</span><br><span class="line">mov ebp,esp</span><br></pre></td></tr></table></figure>
 <blockquote>
-<p>在调试状态下，linux会向/proc/pid/status写入一些进程状态信息，比如TracePid会写入调试进程的pid。</p>
+<p>以上两个代码是函数开始处的常规操作，向上找可以发现0x300ce252地址处为函数开始。这个就是出错函数的起始位置 </p>
 </blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180527/1.png" alt="调试前"></p>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180527/2.png" alt="调试后"></p>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180527/3.png" alt="进程名"></p>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/2.png" alt="cve-2011-0104"></p>
 <blockquote>
-<p>这里对android_server的名字进行了重命名，可以看到主进程很明显是anzhuo_server。注意：TracerPid值就是进程的父进程pid值。根据一个进程只能被一个进程调试的特性，可以让进程自己ptrace自己，然后让android_server不能够调试。代码还是比较简单。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">void test_ptrace(void)&#123;</span><br><span class="line">ptrace(PTRACE_TRACEME,0,0,0);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>PTRACE_TRACEME代表本进程被自身进程ptrace。因为一个进程只能被附加一次，所以，程序一旦被自身附加，后面的调试附加就会失败。</p>
-<h3 id="进程状态检测"><a href="#进程状态检测" class="headerlink" title="进程状态检测"></a>进程状态检测</h3><blockquote>
-<p>检查进程状态也可以理解为检测Tracepid的值。使用IDA调试，需要在手机上启动android_server。一旦调试附加，TracedPid的值就是android_server的进程值。根据上面调试前后tracepid的值。如果不为0，则当前进程可能正在被调试。根据这个特性，可以来判断程序是否被调试。可以在JNI_Onload中加入检测函数。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">void check_tracerpid()</span><br><span class="line">&#123;</span><br><span class="line">    int pid &#x3D; getpid();</span><br><span class="line">    int bufsize &#x3D; 256;</span><br><span class="line">    char filename[bufsize];</span><br><span class="line">    char line[bufsize];</span><br><span class="line">    int tracerpid;</span><br><span class="line">    FILE *fp;</span><br><span class="line">    sprintf(filename, &quot;&#x2F;proc&#x2F;%d&#x2F;status&quot;, pid);</span><br><span class="line">    fp &#x3D; fopen(filename, &quot;r&quot;);</span><br><span class="line">    if (fp !&#x3D; NULL) &#123;</span><br><span class="line">        while (fgets(line, bufsize, fp)) &#123;</span><br><span class="line">            if (strstr(line, &quot;TracerPid&quot;) !&#x3D; NULL) &#123;</span><br><span class="line">                tracerpid &#x3D; atoi(&amp;line[10]);</span><br><span class="line">                if (tracerpid !&#x3D; 0) &#123;</span><br><span class="line">                    int ret &#x3D; kill(pid, SIGKILL);</span><br><span class="line">                &#125;</span><br><span class="line">                break;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        fclose(fp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="调试端口检测"><a href="#调试端口检测" class="headerlink" title="调试端口检测"></a>调试端口检测</h3><blockquote>
-<p>netstat命令经常用来查看正在运行应用的本地端口号,pid,uid等信息。而执行cat /proc/net/tcp 也可以来查看正在运行应用的本地端口号，这就提供了一个检测思路。读取/proc/net/tcp的内容，查找23946端口(IDA调试的默认端口)，如果找到了该端口则说明进程正在被调试。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">void CheckPort23946()</span><br><span class="line">&#123;</span><br><span class="line">    FILE* pfile&#x3D;NULL;</span><br><span class="line">    char buf[0x1000]&#x3D;&#123;0&#125;;</span><br><span class="line">    &#x2F;&#x2F; 执行命令</span><br><span class="line">    char* strCatTcp&#x3D; &quot;cat &#x2F;proc&#x2F;net&#x2F;tcp |grep :5D8A&quot;;</span><br><span class="line">    &#x2F;&#x2F;char* strNetstat&#x3D;&quot;netstat |grep :23946&quot;;</span><br><span class="line">    pfile&#x3D;popen(strCatTcp,&quot;r&quot;);</span><br><span class="line">    if(NULL&#x3D;&#x3D;pfile)</span><br><span class="line">    &#123;</span><br><span class="line">        LOGA(&quot;CheckPort23946ByTcp popen打开命令失败!\n&quot;);</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    while(fgets(buf,sizeof(buf),pfile))</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;&#x2F; 执行到这里，判定为调试状态</span><br><span class="line">        LOGA(&quot;执行cat &#x2F;proc&#x2F;net&#x2F;tcp |grep :5D8A的结果:\n&quot;);</span><br><span class="line">        LOGB(&quot;%s&quot;,buf);</span><br><span class="line">    &#125;&#x2F;&#x2F;while</span><br><span class="line">    pclose(pfile);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="进程名称检测"><a href="#进程名称检测" class="headerlink" title="进程名称检测"></a>进程名称检测</h3><blockquote>
-<p>端口可以检测那可以通过检测进程名字来判断是否被调试。利用ps命令列出所有进程，然后遍历查找，查找固定的进程名，如android_server gdb_server android_x64/86_server mac_server/64等。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">void SearchProcess()</span><br><span class="line">&#123;</span><br><span class="line">    FILE* pfile&#x3D;NULL;</span><br><span class="line">    char buf[0x1000]&#x3D;&#123;0&#125;;</span><br><span class="line">    &#x2F;&#x2F; 执行命令</span><br><span class="line">  </span><br><span class="line">   pfile&#x3D;popen(&quot;ps&quot;,&quot;r&quot;);</span><br><span class="line">    if(NULL&#x3D;&#x3D;pfile)</span><br><span class="line">    &#123;</span><br><span class="line">        LOGA(&quot;SearchProcess popen打开命令失败!\n&quot;);</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    &#x2F;&#x2F; 获取结果</span><br><span class="line">    LOGA(&quot;popen方案:\n&quot;);</span><br><span class="line">    while(fgets(buf,sizeof(buf),pfile))</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;&#x2F; 打印进程</span><br><span class="line">        LOGB(&quot;遍历进程:%s\n&quot;,buf);</span><br><span class="line">        &#x2F;&#x2F; 查找子串</span><br><span class="line">        char* strA&#x3D;NULL,strB&#x3D;NULL,strC&#x3D;NULL,strD&#x3D;NULL;</span><br><span class="line">        strA&#x3D;strstr(buf,&quot;android_server&quot;);</span><br><span class="line">        strB&#x3D;strstr(buf,&quot;gdbserver&quot;);</span><br><span class="line">        strC&#x3D;strstr(buf,&quot;gdb&quot;);</span><br><span class="line">        strD&#x3D;strstr(buf,&quot;fuwu&quot;);</span><br><span class="line">        &#x2F;&#x2F;可以自己加</span><br><span class="line">        if(strA || strB ||strC || strD)</span><br><span class="line">        &#123;</span><br><span class="line">            &#x2F;&#x2F; 执行到这里，判定为调试状态</span><br><span class="line">            LOGB(&quot;发现目标进程:%s\n&quot;,buf);</span><br><span class="line">        &#125;&#x2F;&#x2F;if</span><br><span class="line">    &#125;&#x2F;&#x2F;while</span><br><span class="line">    pclose(pfile);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>以上是一种方案这里也有另外一种操作。<br>调试进程的时候，进程会被IDA中的android_server附加，而在/proc/pid/cmdline中会有进程的进程名，因此通过android_server的进程号就可以找到她的进程名。这里总觉得和上面有重复的感觉，那就换种思路。常规操作下，android_server都会放在/data/local/tmp目录下，那直接检测这个目录下有没有程序不就行了，如果有就退出。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">void check_andser()</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    &#x2F;&#x2F; 获取tracerpid之后</span><br><span class="line">    if (tracerpid !&#x3D; 0) &#123;</span><br><span class="line">        sprintf(filename, &quot;&#x2F;proc&#x2F;%d&#x2F;cmdline&quot;, tracerpid);</span><br><span class="line">        FILE *fd &#x3D; fopen(filename, &quot;r&quot;);</span><br><span class="line">        if (fd !&#x3D; NULL) &#123;</span><br><span class="line">            while (fgets(nameline, bufsize, fd)) &#123;</span><br><span class="line">                if (strstr(nameline, &quot;android_server&quot;) !&#x3D; NULL) &#123;</span><br><span class="line">                    int ret &#x3D; kill(pid, SIGKILL);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="APK线程检测"><a href="#APK线程检测" class="headerlink" title="APK线程检测"></a>APK线程检测</h3><blockquote>
-<p>这个也是第一次听说。网上看大佬博客：正常apk进程一般会有十几个线程在运行(比如会有jdwp线程)，<br>自己写可执行文件加载so一般只有一个线程，可以根据这个差异来进行调试环境检测。这里就不做介绍了。</p>
-</blockquote>
-<h3 id="程序运行时间差检测"><a href="#程序运行时间差检测" class="headerlink" title="程序运行时间差检测"></a>程序运行时间差检测</h3><blockquote>
-<p>对程序进行动态调试时经常会下断点或者对相关的寄存器查看。这样程序的就会被挂起暂停执行。这时代码的前后时间差就会比正常时间大，因此可以利用这个特点来判断代码是否被调试。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">int gettimeofday(struct timeval *tv, struct timezone *tz);</span><br><span class="line">void check_time()</span><br><span class="line">&#123;</span><br><span class="line">    int pid &#x3D; getpid();</span><br><span class="line">    struct timeval t1;</span><br><span class="line">    struct timeval t2;</span><br><span class="line">    struct timezone tz;</span><br><span class="line">    gettimeofday(&amp;t1, &amp;tz);</span><br><span class="line">    gettimeofday(&amp;t2, &amp;tz);</span><br><span class="line">    int timeoff &#x3D; (t2.tv_sec) - (t1.tv_sec);</span><br><span class="line">    if (timeoff &gt; 1) &#123;</span><br><span class="line">        int ret &#x3D; kill(pid, SIGKILL);</span><br><span class="line">        return ;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="防止dump"><a href="#防止dump" class="headerlink" title="防止dump"></a>防止dump</h3><blockquote>
-<p>在对程序脱壳中，经常可能做的就是dump内存操作。脱壳时会到/proc/pid/mem或者/proc/pid/maps下dump内存数据。这里可以使用inotify对文件进行监控，如果发现对文件系统事件的打开，读写，有可能程序在被分析破解。此时通过inotify收到事件变化，就可以执行杀死进程操作。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">void check_inotify()</span><br><span class="line">&#123;</span><br><span class="line">    int ret, len, i;</span><br><span class="line">    int pid &#x3D; getpid();</span><br><span class="line">    const int MAXLEN &#x3D; 2048;</span><br><span class="line">    char buf[1024];</span><br><span class="line">    char readbuf[MAXLEN];</span><br><span class="line">    int fd, wd;</span><br><span class="line">    fd_set readfds;&#x2F;&#x2F;定义文件描述符字的集合</span><br><span class="line">    fd &#x3D; inotify_init();&#x2F;&#x2F;用于创建一个 inotify 实例的系统调用，并返回一个指向该实例的文件描述符</span><br><span class="line">    sprintf(buf, &quot;&#x2F;proc&#x2F;%d&#x2F;maps&quot;, pid);</span><br><span class="line">    wd &#x3D; inotify_add_watch(fd, buf, IN_ALL_EVENTS);</span><br><span class="line">    &#x2F;&#x2F;增加对文件或者目录的监控，并指定需要监控哪些事件。标志用于控制是否将事件添加到已有的监控中，是否只有路径代表一个目录才进行监控，是否要追踪符号链接，是否进行一次性监控，当首次事件出现后就停止监控</span><br><span class="line">    if (wd &gt;&#x3D; 0) &#123;</span><br><span class="line">        while (1) &#123;</span><br><span class="line">            i &#x3D; 0;</span><br><span class="line">            FD_ZERO(&amp;readfds); &#x2F;&#x2F; 对文件描述符集清空</span><br><span class="line">            FD_SET(fd, &amp;readfds); &#x2F;&#x2F; 将fd加入readfds集合</span><br><span class="line">            ret &#x3D; select(fd + 1, &amp;readfds, 0, 0, 0);&#x2F;&#x2F;检查套接字是否可读</span><br><span class="line">            if (ret &#x3D;&#x3D; -1) &#123;</span><br><span class="line">                break;</span><br><span class="line">            &#125; </span><br><span class="line">            if (ret) &#123;</span><br><span class="line">                len &#x3D; read(fd, readbuf, MAXLEN);&#x2F;&#x2F;读取包含一个或者多个事件信息的缓存</span><br><span class="line">                while (i &lt; len) &#123;</span><br><span class="line">                    struct inotify_event *event &#x3D; (struct inotify_event *) &amp;readbuf[i];</span><br><span class="line">                    if ((event-&gt;mask &amp; IN_ACCESS) || (event-&gt;mask &amp; IN_OPEN)) &#123;</span><br><span class="line">                        int ret &#x3D; kill(pid, SIGKILL);</span><br><span class="line">                        return;</span><br><span class="line">                    &#125;</span><br><span class="line">                    i +&#x3D; sizeof(struct inotify_event) + event-&gt;len;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    inotify_rm_watch(fd, wd);&#x2F;&#x2F;从监控列表中移出监控项目</span><br><span class="line">    close(fd);&#x2F;&#x2F;关闭文件描述符，并且移除所有在该描述符上的所有监控。当关于某实例的所有文件描述符都关闭时，资源和下层对象都将释放，以供内核再次使用。</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>当应用程序读取到一个通告时，事件的顺序也被读取到提供的缓存中。事件在一个变长结构中被返回。结构如下:</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">struct inotify_event</span><br><span class="line">&#123;</span><br><span class="line">  int wd;               &#x2F;* Watch descriptor.  *&#x2F;</span><br><span class="line">  uint32_t mask;        &#x2F;* Watch mask.  *&#x2F;</span><br><span class="line">  uint32_t cookie;      &#x2F;* Cookie to synchronize two events.  *&#x2F;</span><br><span class="line">  uint32_t len;         &#x2F;* Length (including NULs) of name.  *&#x2F;</span><br><span class="line">  char name __flexarr;  &#x2F;* Name.  *&#x2F;</span><br><span class="line">  &#125;;</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>这里要注意的是，只有当监控对象是一个目录并且事件与目录内部相关相关有关，且与目录本身无关时，才提供name字段。如果 IN_MOVED_FROM 事件与相应的 IN_MOVED_TO 事件都与被监控的项目有关，cookie 就可用于将两者关联起来。事件类型在掩码字段中返回，并伴随着能够被内核设置的标志。例如，如果事件与目录有关，则标志 IN_ISDIR 将由内核设置。</p>
-</blockquote>
-<p>典型的监控程序需要进行如下操作：</p>
-<ol>
-<li>使用inotify_init打开一个文件描述符。</li>
-<li>添加一个或者多个监控。</li>
-<li>等待事件。</li>
-<li>处理事件，然后返回并等待更多事件。</li>
-<li>当监控不再活动时，或者接到某个信号之后，关闭文件描述符，清空，然后退出。<h3 id="断点检测"><a href="#断点检测" class="headerlink" title="断点检测"></a>断点检测</h3><blockquote>
-<p>Arm程序下断点，调试器首先要保存目标地址处指令，然后将目标地址处指令替换成断点指令。例如0x01,0x00,0x9f,0xef等。当命中断点后，系统产生SIGTRAP信号，调试器收到信号后，首先恢复断点处原指令，然后回退被跟踪进程的当前pc。这时当控制权回到被调试程序时，正好执行断点位置指令。这就是arm平台断点的原理。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;elf.h&gt;</span><br><span class="line">#include &lt;string.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;dlfcn.h&gt;</span><br><span class="line"></span><br><span class="line">void checkBreakPoint ();</span><br><span class="line">unsigned long getLibAddr (const char *lib);</span><br><span class="line">#define LOG_TAG &quot;ANTIDBG_DEMO&quot;</span><br><span class="line">#include &lt;android&#x2F;log.h&gt;</span><br><span class="line">#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)</span><br><span class="line">int main ()</span><br><span class="line">&#123;</span><br><span class="line">    dlopen (&quot;.&#x2F;libdemo.so&quot;, RTLD_NOW);</span><br><span class="line">    sleep (60);</span><br><span class="line">    checkBreakPoint ();</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line">unsigned long getLibAddr (const char *lib) </span><br><span class="line">&#123;</span><br><span class="line">    puts (&quot;Enter getLibAddr&quot;);</span><br><span class="line">    unsigned long addr &#x3D; 0;</span><br><span class="line">    char lineBuf[256];</span><br><span class="line"></span><br><span class="line">    snprintf (lineBuf, 256-1, &quot;&#x2F;proc&#x2F;%d&#x2F;maps&quot;, getpid ());</span><br><span class="line">    FILE *fp &#x3D; fopen (lineBuf, &quot;r&quot;);</span><br><span class="line">    if (fp &#x3D;&#x3D; NULL) &#123;</span><br><span class="line">        perror (&quot;fopen failed&quot;);</span><br><span class="line">        goto bail;</span><br><span class="line">    &#125;</span><br><span class="line">    while (fgets (lineBuf, sizeof(lineBuf), fp)) &#123;</span><br><span class="line">        if (strstr (lineBuf, lib)) &#123;</span><br><span class="line">            char *temp &#x3D; strtok (lineBuf, &quot;-&quot;);</span><br><span class="line">            addr &#x3D; strtoul (temp, NULL, 16);</span><br><span class="line">            break;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">bail: </span><br><span class="line">    fclose(fp);</span><br><span class="line">    return addr;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void checkBreakPoint ()</span><br><span class="line">&#123;</span><br><span class="line">    int i, j;</span><br><span class="line">    unsigned int base, offset, pheader;</span><br><span class="line">    Elf32_Ehdr *elfhdr;</span><br><span class="line">    Elf32_Phdr *ph_t;</span><br><span class="line"></span><br><span class="line">    base &#x3D; getLibAddr (&quot;libdemo.so&quot;);</span><br><span class="line">    if (base &#x3D;&#x3D; 0) &#123;</span><br><span class="line">        LOGI (&quot;getLibAddr failed&quot;);</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    elfhdr &#x3D; (Elf32_Ehdr *) base;</span><br><span class="line">    pheader &#x3D; base + elfhdr-&gt;e_phoff;</span><br><span class="line"></span><br><span class="line">    for (i &#x3D; 0; i &lt; elfhdr-&gt;e_phnum; i++) &#123;</span><br><span class="line">        ph_t &#x3D; (Elf32_Phdr*)(pheader + i * sizeof(Elf32_Phdr)); &#x2F;&#x2F; traverse program header</span><br><span class="line"></span><br><span class="line">        if ( !(ph_t-&gt;p_flags &amp; 1) ) continue;</span><br><span class="line">        offset &#x3D; base + ph_t-&gt;p_vaddr;</span><br><span class="line">        offset +&#x3D; sizeof(Elf32_Ehdr) + sizeof(Elf32_Phdr) * elfhdr-&gt;e_phnum;</span><br><span class="line"></span><br><span class="line">        char *p &#x3D; (char*)offset;</span><br><span class="line">        for (j &#x3D; 0; j &lt; ph_t-&gt;p_memsz; j++) &#123;</span><br><span class="line">            if(*p &#x3D;&#x3D; 0x01 &amp;&amp; *(p+1) &#x3D;&#x3D; 0xde) &#123;</span><br><span class="line">                LOGI (&quot;Find thumb bpt %p&quot;, p);</span><br><span class="line">            &#125; else if (*p &#x3D;&#x3D; 0xf0 &amp;&amp; *(p+1) &#x3D;&#x3D; 0xf7 &amp;&amp; *(p+2) &#x3D;&#x3D; 0x00 &amp;&amp; *(p+3) &#x3D;&#x3D; 0xa0) &#123;</span><br><span class="line">                LOGI (&quot;Find thumb2 bpt %p&quot;, p);</span><br><span class="line">            &#125; else if (*p &#x3D;&#x3D; 0x01 &amp;&amp; *(p+1) &#x3D;&#x3D; 0x00 &amp;&amp; *(p+2) &#x3D;&#x3D; 0x9f &amp;&amp; *(p+3) &#x3D;&#x3D; 0xef) &#123;</span><br><span class="line">                LOGI (&quot;Find arm bpt %p&quot;, p);</span><br><span class="line">            &#125;</span><br><span class="line">            p++;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="单步检测"><a href="#单步检测" class="headerlink" title="单步检测"></a>单步检测</h3><blockquote>
-<p>这种单步检测可以就用代码执行时间差来发现。</p>
-</blockquote>
-<h2 id="emulator层面"><a href="#emulator层面" class="headerlink" title="emulator层面"></a>emulator层面</h2><blockquote>
-<p>一般在分析apk的过程中会借助android模拟器。因此从apk自我保护的角度出发，可以对程序的运行环境检测，判断是否运行在模拟器中，如果运行在模拟器中则退出整个应用程序或者调到其他分支。可以通过属性检测，虚拟机文件检测，基于cache行为,代码指令执行检测等。</p>
-</blockquote>
-<h3 id="属性检测"><a href="#属性检测" class="headerlink" title="属性检测"></a>属性检测</h3><blockquote>
-<p>判断当前设备是否是模拟器。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class AntiEmulator &#123;</span><br><span class="line">    private static String[] known_pipes&#x3D;&#123;</span><br><span class="line">            &quot;&#x2F;dev&#x2F;socket&#x2F;qemud&quot;,</span><br><span class="line">            &quot;&#x2F;dev&#x2F;qemu_pipe&quot;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    private static String[] known_qemu_drivers &#x3D; &#123;</span><br><span class="line">            &quot;goldfish&quot;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    private static String[] known_files &#x3D; &#123;</span><br><span class="line">            &quot;&#x2F;system&#x2F;lib&#x2F;libc_malloc_debug_qemu.so&quot;,</span><br><span class="line">            &quot;&#x2F;sys&#x2F;qemu_trace&quot;,</span><br><span class="line">            &quot;&#x2F;system&#x2F;bin&#x2F;qemu-props&quot;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    private static String[] known_numbers &#x3D; &#123; &quot;15555215554&quot;, &quot;15555215556&quot;,</span><br><span class="line">            &quot;15555215558&quot;, &quot;15555215560&quot;, &quot;15555215562&quot;, &quot;15555215564&quot;,</span><br><span class="line">            &quot;15555215566&quot;, &quot;15555215568&quot;, &quot;15555215570&quot;, &quot;15555215572&quot;,</span><br><span class="line">            &quot;15555215574&quot;, &quot;15555215576&quot;, &quot;15555215578&quot;, &quot;15555215580&quot;,</span><br><span class="line">            &quot;15555215582&quot;, &quot;15555215584&quot;, &#125;;</span><br><span class="line">    private static String[] known_device_ids &#x3D; &#123; </span><br><span class="line">            &quot;000000000000000&quot; &#x2F;&#x2F; 默认ID</span><br><span class="line">    &#125;;</span><br><span class="line">    private static String[] known_imsi_ids &#x3D; &#123; </span><br><span class="line">            &quot;310260000000000&quot; &#x2F;&#x2F; 默认的 imsi id</span><br><span class="line">    &#125;;</span><br><span class="line">    &#x2F;&#x2F;检测“&#x2F;dev&#x2F;socket&#x2F;qemud”，“&#x2F;dev&#x2F;qemu_pipe”这两个通道</span><br><span class="line">    public static boolean checkPipes()&#123;</span><br><span class="line">        for(int i &#x3D; 0; i &lt; known_pipes.length; i++)&#123;</span><br><span class="line">            String pipes &#x3D; known_pipes[i];</span><br><span class="line">            File qemu_socket &#x3D; new File(pipes);</span><br><span class="line">            if(qemu_socket.exists())&#123;</span><br><span class="line">                Log.v(&quot;Result:&quot;, &quot;Find pipes!&quot;);</span><br><span class="line">                return true;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        Log.i(&quot;Result:&quot;, &quot;Not Find pipes!&quot;);</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line">    &#x2F;&#x2F; 检测驱动文件内容</span><br><span class="line">    &#x2F;&#x2F; 读取文件内容，然后检查已知QEmu的驱动程序的列表</span><br><span class="line">    public static Boolean checkQEmuDriverFile()&#123;</span><br><span class="line">        File driver_file &#x3D; new File(&quot;&#x2F;proc&#x2F;tty&#x2F;drivers&quot;);</span><br><span class="line">        if(driver_file.exists() &amp;&amp; driver_file.canRead())&#123;</span><br><span class="line">            byte[] data &#x3D; new byte[1024];  &#x2F;&#x2F;(int)driver_file.length()</span><br><span class="line">            try &#123;</span><br><span class="line">                InputStream inStream &#x3D; new FileInputStream(driver_file);</span><br><span class="line">                inStream.read(data);</span><br><span class="line">                inStream.close();       </span><br><span class="line">            &#125; catch (Exception e) &#123;</span><br><span class="line">                &#x2F;&#x2F; TODO: handle exception</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            String driver_data &#x3D; new String(data);</span><br><span class="line">            for(String known_qemu_driver : AntiEmulator.known_qemu_drivers)&#123;</span><br><span class="line">                if(driver_data.indexOf(known_qemu_driver) !&#x3D; -1)&#123;</span><br><span class="line">                    Log.i(&quot;Result:&quot;, &quot;Find know_qemu_drivers!&quot;);</span><br><span class="line">                    return true;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        Log.i(&quot;Result:&quot;, &quot;Not Find known_qemu_drivers!&quot;);</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;检测模拟器上特有的几个文件</span><br><span class="line">    public static Boolean CheckEmulatorFiles()&#123;</span><br><span class="line">        for(int i &#x3D; 0; i &lt; known_files.length; i++)&#123;</span><br><span class="line">            String file_name &#x3D; known_files[i];</span><br><span class="line">            File qemu_file &#x3D; new File(file_name);</span><br><span class="line">            if(qemu_file.exists())&#123;</span><br><span class="line">                Log.v(&quot;Result:&quot;, &quot;Find Emulator Files!&quot;);</span><br><span class="line">                return true;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        Log.v(&quot;Result:&quot;, &quot;Not Find Emulator Files!&quot;);</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 检测模拟器默认的电话号码</span><br><span class="line">    public static Boolean CheckPhoneNumber(Context context) &#123;</span><br><span class="line">        TelephonyManager telephonyManager &#x3D; (TelephonyManager) context</span><br><span class="line">                .getSystemService(Context.TELEPHONY_SERVICE);</span><br><span class="line"></span><br><span class="line">        String phonenumber &#x3D; telephonyManager.getLine1Number();</span><br><span class="line"></span><br><span class="line">        for (String number : known_numbers) &#123;</span><br><span class="line">            if (number.equalsIgnoreCase(phonenumber)) &#123;</span><br><span class="line">                Log.v(&quot;Result:&quot;, &quot;Find PhoneNumber!&quot;);</span><br><span class="line">                return true;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        Log.v(&quot;Result:&quot;, &quot;Not Find PhoneNumber!&quot;);</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;检测设备IDS 是不是 “000000000000000”</span><br><span class="line">    public static Boolean CheckDeviceIDS(Context context) &#123;</span><br><span class="line">        TelephonyManager telephonyManager &#x3D; (TelephonyManager) context</span><br><span class="line">                .getSystemService(Context.TELEPHONY_SERVICE);</span><br><span class="line"></span><br><span class="line">        String device_ids &#x3D; telephonyManager.getDeviceId();</span><br><span class="line"></span><br><span class="line">        for (String know_deviceid : known_device_ids) &#123;</span><br><span class="line">            if (know_deviceid.equalsIgnoreCase(device_ids)) &#123;</span><br><span class="line">                Log.v(&quot;Result:&quot;, &quot;Find ids: 000000000000000!&quot;);</span><br><span class="line">                return true;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        Log.v(&quot;Result:&quot;, &quot;Not Find ids: 000000000000000!&quot;);</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 检测imsi id是不是“310260000000000”</span><br><span class="line">    public static Boolean CheckImsiIDS(Context context)&#123;</span><br><span class="line">        TelephonyManager telephonyManager &#x3D; (TelephonyManager)</span><br><span class="line">                context.getSystemService(Context.TELEPHONY_SERVICE);</span><br><span class="line"></span><br><span class="line">        String imsi_ids &#x3D; telephonyManager.getSubscriberId();</span><br><span class="line"></span><br><span class="line">        for (String know_imsi : known_imsi_ids) &#123;</span><br><span class="line">            if (know_imsi.equalsIgnoreCase(imsi_ids)) &#123;</span><br><span class="line">                Log.v(&quot;Result:&quot;, &quot;Find imsi ids: 310260000000000!&quot;);</span><br><span class="line">                return true;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        Log.v(&quot;Result:&quot;, &quot;Not Find imsi ids: 310260000000000!&quot;);</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;检测手机上的一些硬件信息</span><br><span class="line">    public static Boolean CheckEmulatorBuild(Context context)&#123;</span><br><span class="line">        String BOARD &#x3D; android.os.Build.BOARD;</span><br><span class="line">        String BOOTLOADER &#x3D; android.os.Build.BOOTLOADER;</span><br><span class="line">        String BRAND &#x3D; android.os.Build.BRAND;</span><br><span class="line">        String DEVICE &#x3D; android.os.Build.DEVICE;</span><br><span class="line">        String HARDWARE &#x3D; android.os.Build.HARDWARE;</span><br><span class="line">        String MODEL &#x3D; android.os.Build.MODEL;</span><br><span class="line">        String PRODUCT &#x3D; android.os.Build.PRODUCT;</span><br><span class="line">        if (BOARD &#x3D;&#x3D; &quot;unknown&quot; || BOOTLOADER &#x3D;&#x3D; &quot;unknown&quot;</span><br><span class="line">                || BRAND &#x3D;&#x3D; &quot;generic&quot; || DEVICE &#x3D;&#x3D; &quot;generic&quot;</span><br><span class="line">                || MODEL &#x3D;&#x3D; &quot;sdk&quot; || PRODUCT &#x3D;&#x3D; &quot;sdk&quot;</span><br><span class="line">                || HARDWARE &#x3D;&#x3D; &quot;goldfish&quot;)</span><br><span class="line">        &#123;</span><br><span class="line">            Log.v(&quot;Result:&quot;, &quot;Find Emulator by EmulatorBuild!&quot;);</span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line">        Log.v(&quot;Result:&quot;, &quot;Not Find Emulator by EmulatorBuild!&quot;);</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;检测手机运营商家</span><br><span class="line">    public static boolean CheckOperatorNameAndroid(Context context) &#123;</span><br><span class="line">        String szOperatorName &#x3D; ((TelephonyManager)</span><br><span class="line">                context.getSystemService(&quot;phone&quot;)).getNetworkOperatorName();</span><br><span class="line"></span><br><span class="line">        if (szOperatorName.toLowerCase().equals(&quot;android&quot;) &#x3D;&#x3D; true) &#123;</span><br><span class="line">            Log.v(&quot;Result:&quot;, &quot;Find Emulator by OperatorName!&quot;);</span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line">        Log.v(&quot;Result:&quot;, &quot;Not Find Emulator by OperatorName!&quot;);</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>也可以检测一些其他的值，如电池的电池状态，电池电量，Secure.ANDROIOD_ID,Deviceid,手机号码等。</p>
-</blockquote>
-<h3 id="虚拟机文件检测"><a href="#虚拟机文件检测" class="headerlink" title="虚拟机文件检测"></a>虚拟机文件检测</h3><blockquote>
-<p>相对于真实设备，上述的检测手段不再适用。安卓模拟器中存在一些特殊的文件或者目录，如/system/bin/qemu-props,该可执行文件可以用来在模拟器中设置系统属性。常用的模拟器都会进行一定程度的定制，这样都会有些带有该型号文件特征的文件，比如海马玩在system/bin下就有一个droid4x-prop,夜神模拟器在system/bin路径下有nox-prop。一般的手机上不会有这一文件，这可以作为一个思路来进行检测。</p>
-</blockquote>
-</li>
-</ol>
-<table>
-<thead>
-<tr>
-<th align="center">检测列表</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">/system/lib/libc_malloc_debug_qemu.so</td>
-</tr>
-<tr>
-<td align="center">/system/lib/libc_malloc_debug_qemu.so-arm</td>
-</tr>
-<tr>
-<td align="center">/system/bin/qemu_props</td>
-</tr>
-<tr>
-<td align="center">/system/bin/androVM-prop</td>
-</tr>
-<tr>
-<td align="center">/system/bin/microvirt-prop</td>
-</tr>
-<tr>
-<td align="center">/system/bin/windroyed(文卓爷模拟器)</td>
-</tr>
-<tr>
-<td align="center">/system/bin/microvirt</td>
-</tr>
-<tr>
-<td align="center">/system/bin/nox-prop(夜神模拟器)</td>
-</tr>
-<tr>
-<td align="center">/system/bin/ttVM-prop(天天模拟器)</td>
-</tr>
-<tr>
-<td align="center">/system/bin/droid4x-prop(海马玩模拟器)</td>
-</tr>
-<tr>
-<td align="center">### 基于cache行为检测</td>
-</tr>
-</tbody></table>
-<blockquote>
-<p>cache原理模拟器和真机是有所不同，真机的cache模块是分区的，模拟器的是没有分区，是一整个cache。</p>
-</blockquote>
-<h2 id="res层面"><a href="#res层面" class="headerlink" title="res层面"></a>res层面</h2><h3 id="资源检测防止重打包"><a href="#资源检测防止重打包" class="headerlink" title="资源检测防止重打包"></a>资源检测防止重打包</h3><blockquote>
-<p>SDK中提供了检测软件签名的方法，可以调用PackageManager类的getPackageInfo()方法，为第2个参数传入PackageManager.GET_SIGNATURES,返回的PackageInfo对象的signature字段就是软件发布时的签名，但签名内容过长，不适合在代码中作比较，可以使用签名对象的hashcode()方法来获取hash值，比较hash值即可。<br>可以有两种方案：</p>
+<p>再次重新加载程序，在0x300ce252地址处下断点，并对esp栈顶内存下写入断点。这里对此做一个解释，为什么下这个断点呢。因为漏洞在复制数据时会覆盖此地址，此地址是调用0x300ce252函数的返回地址。一旦数据覆盖进行写入操作，就会触发断点，这就定位到了异常出错位置。</p>
 </blockquote>
 <ul>
-<li>直接在 java代码中实现，签名不一致则退出应用。</li>
-<li>将签名信息携带有关参数，发送到服务端进行签名校验，失败就返回错误。<br>虽然有这些签名校验的存在，但始终可以在本地解决。但也是一种方案。<h3 id="使用伪加密"><a href="#使用伪加密" class="headerlink" title="使用伪加密"></a>使用伪加密</h3><blockquote>
-<p>伪加密是Android4.2.x系统发布前的加密方式之一，通过java代码对APK(压缩文件)进行伪加密，其修改原理是修改连续4位字节标记为”P K 01 02”的后第5位字节，奇数表示不加密偶数表示加密。伪加密后的APK不但可以防止PC端对它的解压和查看也同样能防止反编译工具编译。</p>
-</blockquote>
-</li>
+<li>打开一个空白的excel程序</li>
+<li>打开immunity Debugger,附加excel进程</li>
+<li>使用bp 300ce252命令下断点。</li>
+<li>按下F9将程序运行起来。</li>
+<li>在打开的excel中使用file–&gt;open打开配套资料中的exploit.xlb文件。</li>
+<li>程序断下</li>
 </ul>
-<hr>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/3.png" alt="cve-2011-0104"></p>
 <blockquote>
-<p>虽然伪加密可以起到一定防破解作用，但同时会出现这样的问题，首先使用伪加密对其APK加密后市场无法对其进行安全检测，导致部分市场会拒绝这类APK上 传；其次，伪加密的加密方式和解密方式也早已公布导致它的安全程度也大大降低；再次，Android4.2.x系统无法安装伪加密的APK；最后伪加密只 是对APK做简单保护，在java层源码加壳保护、核心so库、资源文件、主配文件、第三方架包方面却没有任何保护处理。因此APK伪加密是无法真正有效的防破解</p>
+<p>内存断点下好后，F9运行，可以看到程序停在了0x300ce3c8地址处，又是一个复制数据出错。</p>
 </blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/4.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>观察寄存器ebp和edi,之间的大小就是允许复制的数据。计算可得为0x60字节大小。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/5.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>分析可知复制了96个字节，edi的值递增覆盖到栈顶0x13aa90,后面利用的跳板地址。单步运行到程序末尾处，返回可以发现是出错复制代码位于call 0x300ce380中。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/6.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>为了后面更好的搞清楚栈的覆盖和漏洞利用，有必要梳理下函数调用关系。<br><strong>1.</strong>首先定位在0x300ce252,单步运行程序，一步步通过观察堆栈内容是否覆盖来判断程序调用流程。再次重新加载程序。加载过程同上。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/7.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>经过0x302188d8地址处的call excel.306deefe后，栈区被一些乱七八糟的数据填充。可以判断，异常位于这个call中。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/8.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p><strong>2.</strong>下面要做的就是重新加载程序，在0x302188d8地址处下断点，然后进入call深入分析。<br>进入函数中可以看到。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/9.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>梳理总结下流程。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/10.png" alt="cve-2011-0104"></p>
+<h2 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h2><blockquote>
+<p>调试分析可以总结得到，数据覆盖的是sub_300ce252函数的返回地址。也就是栈地址0x13aa90。有了返回地址，还要注意到返回时的ret 2c指令，收回了44个空间大小的数据。这样基本就可以完成漏洞利用了。但当程序运行到0x300CE361处的MOV DWORD PTR DS:[EAX],ECX时出现访问违例：访问到一个不可写的地址0x51453844，此时EAX=0x51453844，向上回溯程序，找出EAX的赋值处，发现在0x300CE354处出现给EAX赋值的操作: MOV EAX, DWORD PTR SS:[EBP+2C]，此时EBP=0x0013AA8C,EBP+2C=0x0013AAB8,0x0013AAB8处的值恰好是0x51453844。观察栈中的数据，51453844恰好又是shellcode中的数据。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/11.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>根据栈区和样本数据中对应出现的数据，修改相应数值，并添加shellcode。即可利用。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/12.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>利用效果</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/13.png" alt="cve-2011-0104"></p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
-<p>上述的一些反调试方法很大程度参考了网上一些大佬的博客，有些可能已经不再适用。但作为菜鸟几天的学习收获，了解到了很多有用的知识。虽然总结的很繁琐，但挺值得。继续努力吧！</p>
+<p>这次由于时间原因，写的比较仓促可能具体细节不怎么具体。后续再补上，欢迎交流指导。</p>
 </blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/two_dimen.png" alt="博客链接" title="博客链接"></p>
-<h3 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h3><p><a href="https://blog.csdn.net/feibabeibei_beibei/article/details/60956307" target="_blank" rel="noopener">https://blog.csdn.net/feibabeibei_beibei/article/details/60956307</a><br><a href="https://blog.csdn.net/darmao/article/details/78816964" target="_blank" rel="noopener">https://blog.csdn.net/darmao/article/details/78816964</a><br><a href="https://blog.csdn.net/iEearth/article/details/72849990" target="_blank" rel="noopener">https://blog.csdn.net/iEearth/article/details/72849990</a><br><a href="https://www.ibm.com/developerworks/cn/linux/l-inotify/index.html" target="_blank" rel="noopener">https://www.ibm.com/developerworks/cn/linux/l-inotify/index.html</a><br><a href="https://blog.csdn.net/earbao/article/details/53933306" target="_blank" rel="noopener">https://blog.csdn.net/earbao/article/details/53933306</a></p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2011-0104" target="_blank" rel="noopener">cve-2011-0104</a><br><a href="https://bbs.pediy.com/thread-217940.htm" target="_blank" rel="noopener">看雪的精品文章</a><br><a href="http://www.cnblogs.com/Ox9A82" target="_blank" rel="noopener">Ox9A82</a><br><a href="https://www.securityfocus.com/bid/47245" target="_blank" rel="noopener">安全焦点</a></p>
 ]]></content>
       <categories>
-        <category>理论研究</category>
-        <category>Android</category>
+        <category>漏洞分析</category>
       </categories>
       <tags>
-        <tag>安卓</tag>
-        <tag>反调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>这是一个测试</title>
-    <url>/2018/03/03/%E6%B5%8B%E8%AF%95/</url>
-    <content><![CDATA[<h2 id="加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看-我的小窝"><a href="#加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看-我的小窝" class="headerlink" title="加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝"></a>加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</h2><p>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，<br>在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</p>
-<a id="more"></a>
-
-<p>加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，<br>在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</p>
-]]></content>
-      <categories>
-        <category>恶意代码分析</category>
-      </categories>
-      <tags>
-        <tag>标签1</tag>
-        <tag>标签2</tag>
-        <tag>标签3</tag>
+        <tag>CVE</tag>
+        <tag>文档漏洞</tag>
+        <tag>栈溢出</tag>
       </tags>
   </entry>
 </search>
