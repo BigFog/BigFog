@@ -19,92 +19,6 @@
 ]]></content>
   </entry>
   <entry>
-    <title>Xposed框架使用初探(一)</title>
-    <url>/2018/03/15/Xposed%E6%A1%86%E6%9E%B6%E4%BD%BF%E7%94%A8%E5%88%9D%E6%8E%A2(%E4%B8%80)/</url>
-    <content><![CDATA[<h2 id="Hook简介"><a href="#Hook简介" class="headerlink" title="Hook简介"></a>Hook简介</h2><blockquote>
-<p>Hook英文翻译即为钩子。windows下的Hook是一种消息处理机制。每当特定的消息发出，在没有到达目的窗口前，钩子程序就先捕获该消息，即钩子函数先得到控制权，这时钩子函数就可以对消息进行加工处理。它其实是一个处理消息的程序段。当然在安卓系统中也有Hook技术，和windows下的Hook类似，也是在事件传送到终点前截获并监控事件的传输，并对所钩上的事件作出相应的处理。</p>
-</blockquote>
-<h2 id="xposed框架"><a href="#xposed框架" class="headerlink" title="xposed框架"></a>xposed框架</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><blockquote>
-<p>Xposed框架是一款对安卓平台的HOOK框架，可以在不修改APK的情况下修改程序的框架服务。通过替换/system/bin/app_process程序控制Zygote进程，从而使app_process在启动过程中加载XposedBridge.jar这个jar包。Zygote进程在启动过程中，会创建一个Dalvik虚拟机实例，还会把java运行时库加载到进程中来，以及注册一些Android核心类的JNI方法来前面创建的Dalvik虚拟机实例中去，应用程序进程会与Zygote一起共享Java运行时库。这就是XposedBridge.jar包可以加载的原因。</p>
-</blockquote>
-<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><blockquote>
-<p>Xposed框架本质只是一个apk应用，可安装到手机。相应模块(Hook代码)就需要我们去编写，模块也是apk文件。</p>
-</blockquote>
-<ol>
-<li><p>手机必须是具有Root权限的。Root是有一定风险的。所以这里使用的是模拟器。</p>
-</li>
-<li><p>实验设备：夜神模拟器+Android4.4.2+XposedInstall.apk(v2.7)+XposedBridge.jar-54。</p>
-</li>
-<li><p>Xposed框架安装效果如下：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p1.png" alt="效果图-1"></p>
-<h2 id="Xposed使用示例"><a href="#Xposed使用示例" class="headerlink" title="Xposed使用示例"></a>Xposed使用示例</h2><h3 id="需要被Hook的程序"><a href="#需要被Hook的程序" class="headerlink" title="需要被Hook的程序"></a>需要被Hook的程序</h3><blockquote>
-<p>程序界面如下</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p2.png" alt="界面-2"></p>
-<blockquote>
-<p>源代码如下:</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p3.jpg" alt="源代码-3"></p>
-<blockquote>
-<p>源代码逻辑很简单，输入一段字符串，然后在compare函数中比较。根据返回值判断输入是否正确。因为这只是做一个示例，compare函数中直接用了equals函数来比较。在代码编程中这是很愚蠢的做法，强烈不建议这种写法。<br>如果想让程序返回正确的值，只要将compare的返回值为true即可。我们这里Hook的就是compare函数，不管输入任意字符，都会显示返回成功。</p>
-</blockquote>
-<h3 id="Hook关键函数介绍"><a href="#Hook关键函数介绍" class="headerlink" title="Hook关键函数介绍"></a>Hook关键函数介绍</h3><blockquote>
-<p>IXposedHookLoadPackage类：加载回调接口，在Xposed入口类继承，实现handleLoadPackage方法。<br>handleLoadPackage：这个方法用于在加载应用程序的包的时候执行用户的操作。<br>findAndHookMethod(String className, ClassLoader classLoader, String methodName, Object… parameterTypesAndCallback) hook一个类中的方法<br>参数:<br>className: 要hook的方法的所在类<br>classloader: 要hook的包的classLoader，一般都写loadPackageParam.classLoader<br>methodName: 要hook的方法<br>parameterTypesAndCallback: 方法的参数和监听器。</p>
-</blockquote>
-<h3 id="导入lib文件"><a href="#导入lib文件" class="headerlink" title="导入lib文件"></a>导入lib文件</h3><blockquote>
-<p>新建安卓项目，这个应该很简单。需要导入jar文件-XposedBridgeApi-54.jar。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p4.png" alt="结构图-4"></p>
-</li>
-</ol>
-<blockquote>
-<p>新建文件夹，命名为lib,然后将XposedBridgeApi-54.jar复制过来。右键Add as library。这样就能看到里面的类了。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p5.png" alt="结构图-5"></p>
-<blockquote>
-<p>然后修改build.gradle文件，将compile改为provided。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p6.jpg" alt="结构图-6"></p>
-<h3 id="AndroidManifest-xml文件修改"><a href="#AndroidManifest-xml文件修改" class="headerlink" title="AndroidManifest.xml文件修改"></a>AndroidManifest.xml文件修改</h3><p>需要在配置文件中添加一些属性。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;application&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedmodule&quot; android:value&#x3D;&quot;true&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposeddescription&quot; android:value&#x3D;&quot;模块第一次测试&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedminversion&quot; android:value&#x3D;&quot;54&quot;&#x2F;&gt;</span><br><span class="line">&lt;&#x2F;application&gt;</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>xposedmodule:判断是否是xposed模块，xposed根据这个来判断是否是模块。<br>xposeddescription：模块描述，会显示在xposed框架模块列表中。<br>xposedminversion：最低xposed版本号，lib文件名可知。</p>
-</blockquote>
-<h3 id="入口类编写"><a href="#入口类编写" class="headerlink" title="入口类编写"></a>入口类编写</h3><blockquote>
-<p>创建一个类，实现IXposedHookLoadPackage借口，重写handLoadPackage方法，这里创建了一个xposedmain类。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class xposedmain implements IXposedHookLoadPackage &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam Param) throws Throwable &#123;</span><br><span class="line">        if(Param.packageName.equals(&quot;com.example.zzwbi.check&quot;))&#x2F;&#x2F;匹配包名</span><br><span class="line">        &#123;</span><br><span class="line">            XposedBridge.log(&quot;Loaded APP:&quot;+Param.packageName);&#x2F;&#x2F;XposedBridge.log相当于日志输出。</span><br><span class="line">            try &#123;</span><br><span class="line">                findAndHookMethod(&quot;com.example.zzwbi.check.MainActivity&quot;, Param.classLoader, &quot;compare&quot;, String.class, new get_True());</span><br><span class="line">                                  &#x2F;&#x2F;类名，一般都写Param.classLoader,方法名，参数...,hook的方法</span><br><span class="line">            &#125; catch (Exception e) &#123;</span><br><span class="line">                XposedBridge.log(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">class get_True extends XC_MethodHook &#123;</span><br><span class="line">    protected void beforeHookedMethod(XC_MethodHook.MethodHookParam param) throws Throwable &#123;</span><br><span class="line">        XposedBridge.log(&quot;beforeHookedMethod userName:&quot; + param.args[0]);</span><br><span class="line">        &#x2F;&#x2F;hook前的一些操作</span><br><span class="line">    &#125;</span><br><span class="line">    protected void afterHookedMethod(XC_MethodHook.MethodHookParam args) throws Throwable &#123;</span><br><span class="line">        &#x2F;&#x2F;hook后的一些操作</span><br><span class="line">        args.setResult(true);</span><br><span class="line">        XposedBridge.log(&quot;使返回值为true&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="设置启动入口"><a href="#设置启动入口" class="headerlink" title="设置启动入口"></a>设置启动入口</h3><blockquote>
-<p>新建assets文件夹,在里面新建文件名为xposed_init,写入你自己创建的xposedmain类包名。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p7.png" alt="启动入口-7"></p>
-<blockquote>
-<p>包名+类名</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p8.png" alt="示意图-8"></p>
-<h3 id="安装激活插件"><a href="#安装激活插件" class="headerlink" title="安装激活插件"></a>安装激活插件</h3><blockquote>
-<p>将apk安装到模拟器上，重启后即可看到插件效果。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p9.png" alt="启用插件-9"></p>
-<blockquote>
-<p>下面看下hook效果</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p10.png" alt="Hook成功-10"></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
-<p>这只是对于Xposed学习的一次小尝试。对于其Hook还有很多地方要学习。例如静态field变量,隐藏函数，内部类，匿名内部类，构造函数的Hook都要继续研究。</p>
-</blockquote>
-<p>####参考链接:<br><a href="http://blog.csdn.net/jiabailong/article/details/52368002" target="_blank" rel="noopener">http://blog.csdn.net/jiabailong/article/details/52368002</a><br> <a href="http://blog.csdn.net/wxyyxc1992/article/details/17320911" target="_blank" rel="noopener">http://blog.csdn.net/wxyyxc1992/article/details/17320911</a><br><a href="http://www.freebuf.com/articles/terminal/114910.html" target="_blank" rel="noopener">http://www.freebuf.com/articles/terminal/114910.html</a></p>
-]]></content>
-      <categories>
-        <category>编程开发</category>
-        <category>Android</category>
-      </categories>
-      <tags>
-        <tag>安卓</tag>
-        <tag>Xposed</tag>
-        <tag>基础</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>安卓动态链接库编写</title>
     <url>/2018/03/03/%E5%AE%89%E5%8D%93%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E7%BC%96%E5%86%99/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
@@ -258,6 +172,92 @@
       </tags>
   </entry>
   <entry>
+    <title>Xposed框架使用初探(一)</title>
+    <url>/2018/03/15/Xposed%E6%A1%86%E6%9E%B6%E4%BD%BF%E7%94%A8%E5%88%9D%E6%8E%A2(%E4%B8%80)/</url>
+    <content><![CDATA[<h2 id="Hook简介"><a href="#Hook简介" class="headerlink" title="Hook简介"></a>Hook简介</h2><blockquote>
+<p>Hook英文翻译即为钩子。windows下的Hook是一种消息处理机制。每当特定的消息发出，在没有到达目的窗口前，钩子程序就先捕获该消息，即钩子函数先得到控制权，这时钩子函数就可以对消息进行加工处理。它其实是一个处理消息的程序段。当然在安卓系统中也有Hook技术，和windows下的Hook类似，也是在事件传送到终点前截获并监控事件的传输，并对所钩上的事件作出相应的处理。</p>
+</blockquote>
+<h2 id="xposed框架"><a href="#xposed框架" class="headerlink" title="xposed框架"></a>xposed框架</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><blockquote>
+<p>Xposed框架是一款对安卓平台的HOOK框架，可以在不修改APK的情况下修改程序的框架服务。通过替换/system/bin/app_process程序控制Zygote进程，从而使app_process在启动过程中加载XposedBridge.jar这个jar包。Zygote进程在启动过程中，会创建一个Dalvik虚拟机实例，还会把java运行时库加载到进程中来，以及注册一些Android核心类的JNI方法来前面创建的Dalvik虚拟机实例中去，应用程序进程会与Zygote一起共享Java运行时库。这就是XposedBridge.jar包可以加载的原因。</p>
+</blockquote>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><blockquote>
+<p>Xposed框架本质只是一个apk应用，可安装到手机。相应模块(Hook代码)就需要我们去编写，模块也是apk文件。</p>
+</blockquote>
+<ol>
+<li><p>手机必须是具有Root权限的。Root是有一定风险的。所以这里使用的是模拟器。</p>
+</li>
+<li><p>实验设备：夜神模拟器+Android4.4.2+XposedInstall.apk(v2.7)+XposedBridge.jar-54。</p>
+</li>
+<li><p>Xposed框架安装效果如下：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p1.png" alt="效果图-1"></p>
+<h2 id="Xposed使用示例"><a href="#Xposed使用示例" class="headerlink" title="Xposed使用示例"></a>Xposed使用示例</h2><h3 id="需要被Hook的程序"><a href="#需要被Hook的程序" class="headerlink" title="需要被Hook的程序"></a>需要被Hook的程序</h3><blockquote>
+<p>程序界面如下</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p2.png" alt="界面-2"></p>
+<blockquote>
+<p>源代码如下:</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p3.jpg" alt="源代码-3"></p>
+<blockquote>
+<p>源代码逻辑很简单，输入一段字符串，然后在compare函数中比较。根据返回值判断输入是否正确。因为这只是做一个示例，compare函数中直接用了equals函数来比较。在代码编程中这是很愚蠢的做法，强烈不建议这种写法。<br>如果想让程序返回正确的值，只要将compare的返回值为true即可。我们这里Hook的就是compare函数，不管输入任意字符，都会显示返回成功。</p>
+</blockquote>
+<h3 id="Hook关键函数介绍"><a href="#Hook关键函数介绍" class="headerlink" title="Hook关键函数介绍"></a>Hook关键函数介绍</h3><blockquote>
+<p>IXposedHookLoadPackage类：加载回调接口，在Xposed入口类继承，实现handleLoadPackage方法。<br>handleLoadPackage：这个方法用于在加载应用程序的包的时候执行用户的操作。<br>findAndHookMethod(String className, ClassLoader classLoader, String methodName, Object… parameterTypesAndCallback) hook一个类中的方法<br>参数:<br>className: 要hook的方法的所在类<br>classloader: 要hook的包的classLoader，一般都写loadPackageParam.classLoader<br>methodName: 要hook的方法<br>parameterTypesAndCallback: 方法的参数和监听器。</p>
+</blockquote>
+<h3 id="导入lib文件"><a href="#导入lib文件" class="headerlink" title="导入lib文件"></a>导入lib文件</h3><blockquote>
+<p>新建安卓项目，这个应该很简单。需要导入jar文件-XposedBridgeApi-54.jar。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p4.png" alt="结构图-4"></p>
+</li>
+</ol>
+<blockquote>
+<p>新建文件夹，命名为lib,然后将XposedBridgeApi-54.jar复制过来。右键Add as library。这样就能看到里面的类了。</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p5.png" alt="结构图-5"></p>
+<blockquote>
+<p>然后修改build.gradle文件，将compile改为provided。</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p6.jpg" alt="结构图-6"></p>
+<h3 id="AndroidManifest-xml文件修改"><a href="#AndroidManifest-xml文件修改" class="headerlink" title="AndroidManifest.xml文件修改"></a>AndroidManifest.xml文件修改</h3><p>需要在配置文件中添加一些属性。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;application&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedmodule&quot; android:value&#x3D;&quot;true&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposeddescription&quot; android:value&#x3D;&quot;模块第一次测试&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedminversion&quot; android:value&#x3D;&quot;54&quot;&#x2F;&gt;</span><br><span class="line">&lt;&#x2F;application&gt;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>xposedmodule:判断是否是xposed模块，xposed根据这个来判断是否是模块。<br>xposeddescription：模块描述，会显示在xposed框架模块列表中。<br>xposedminversion：最低xposed版本号，lib文件名可知。</p>
+</blockquote>
+<h3 id="入口类编写"><a href="#入口类编写" class="headerlink" title="入口类编写"></a>入口类编写</h3><blockquote>
+<p>创建一个类，实现IXposedHookLoadPackage借口，重写handLoadPackage方法，这里创建了一个xposedmain类。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class xposedmain implements IXposedHookLoadPackage &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam Param) throws Throwable &#123;</span><br><span class="line">        if(Param.packageName.equals(&quot;com.example.zzwbi.check&quot;))&#x2F;&#x2F;匹配包名</span><br><span class="line">        &#123;</span><br><span class="line">            XposedBridge.log(&quot;Loaded APP:&quot;+Param.packageName);&#x2F;&#x2F;XposedBridge.log相当于日志输出。</span><br><span class="line">            try &#123;</span><br><span class="line">                findAndHookMethod(&quot;com.example.zzwbi.check.MainActivity&quot;, Param.classLoader, &quot;compare&quot;, String.class, new get_True());</span><br><span class="line">                                  &#x2F;&#x2F;类名，一般都写Param.classLoader,方法名，参数...,hook的方法</span><br><span class="line">            &#125; catch (Exception e) &#123;</span><br><span class="line">                XposedBridge.log(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">class get_True extends XC_MethodHook &#123;</span><br><span class="line">    protected void beforeHookedMethod(XC_MethodHook.MethodHookParam param) throws Throwable &#123;</span><br><span class="line">        XposedBridge.log(&quot;beforeHookedMethod userName:&quot; + param.args[0]);</span><br><span class="line">        &#x2F;&#x2F;hook前的一些操作</span><br><span class="line">    &#125;</span><br><span class="line">    protected void afterHookedMethod(XC_MethodHook.MethodHookParam args) throws Throwable &#123;</span><br><span class="line">        &#x2F;&#x2F;hook后的一些操作</span><br><span class="line">        args.setResult(true);</span><br><span class="line">        XposedBridge.log(&quot;使返回值为true&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="设置启动入口"><a href="#设置启动入口" class="headerlink" title="设置启动入口"></a>设置启动入口</h3><blockquote>
+<p>新建assets文件夹,在里面新建文件名为xposed_init,写入你自己创建的xposedmain类包名。</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p7.png" alt="启动入口-7"></p>
+<blockquote>
+<p>包名+类名</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p8.png" alt="示意图-8"></p>
+<h3 id="安装激活插件"><a href="#安装激活插件" class="headerlink" title="安装激活插件"></a>安装激活插件</h3><blockquote>
+<p>将apk安装到模拟器上，重启后即可看到插件效果。</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p9.png" alt="启用插件-9"></p>
+<blockquote>
+<p>下面看下hook效果</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p10.png" alt="Hook成功-10"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>这只是对于Xposed学习的一次小尝试。对于其Hook还有很多地方要学习。例如静态field变量,隐藏函数，内部类，匿名内部类，构造函数的Hook都要继续研究。</p>
+</blockquote>
+<p>####参考链接:<br><a href="http://blog.csdn.net/jiabailong/article/details/52368002" target="_blank" rel="noopener">http://blog.csdn.net/jiabailong/article/details/52368002</a><br> <a href="http://blog.csdn.net/wxyyxc1992/article/details/17320911" target="_blank" rel="noopener">http://blog.csdn.net/wxyyxc1992/article/details/17320911</a><br><a href="http://www.freebuf.com/articles/terminal/114910.html" target="_blank" rel="noopener">http://www.freebuf.com/articles/terminal/114910.html</a></p>
+]]></content>
+      <categories>
+        <category>编程开发</category>
+        <category>Android</category>
+      </categories>
+      <tags>
+        <tag>安卓</tag>
+        <tag>Xposed</tag>
+        <tag>基础</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>安卓设置按钮监听的四种方式</title>
     <url>/2018/03/14/%E5%AE%89%E5%8D%93%E8%AE%BE%E7%BD%AE%E6%8C%89%E9%92%AE%E7%9B%91%E5%90%AC%E7%9A%84%E5%9B%9B%E7%A7%8D%E6%96%B9%E5%BC%8F/</url>
     <content><![CDATA[<p>这里的布局文件就很简单。只是一个简单的按钮。ID为button1。</p>
@@ -289,23 +289,6 @@
       <tags>
         <tag>安卓</tag>
         <tag>监听</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>这是一个测试</title>
-    <url>/2018/03/03/%E6%B5%8B%E8%AF%95/</url>
-    <content><![CDATA[<h2 id="加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看-我的小窝"><a href="#加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看-我的小窝" class="headerlink" title="加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝"></a>加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</h2><p>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，<br>在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</p>
-<a id="more"></a>
-
-<p>加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，<br>在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</p>
-]]></content>
-      <categories>
-        <category>恶意代码分析</category>
-      </categories>
-      <tags>
-        <tag>标签1</tag>
-        <tag>标签2</tag>
-        <tag>标签3</tag>
       </tags>
   </entry>
   <entry>
@@ -474,6 +457,23 @@
       <tags>
         <tag>安卓</tag>
         <tag>反调试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>这是一个测试</title>
+    <url>/2018/03/03/%E6%B5%8B%E8%AF%95/</url>
+    <content><![CDATA[<h2 id="加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看-我的小窝"><a href="#加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看-我的小窝" class="headerlink" title="加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝"></a>加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</h2><p>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，<br>在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</p>
+<a id="more"></a>
+
+<p>加快速度副驾驶的交话费看老师最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝<br>最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝最近使用Hexo搭建了自己的博客，并且使用了简洁但是强大的NexT主题。这里介绍一下NexT主题下设置在首页显示一篇文章的简介，<br>在简介后面提供一个链接阅读全文来进入文章的详情页。效果请看 我的小窝</p>
+]]></content>
+      <categories>
+        <category>恶意代码分析</category>
+      </categories>
+      <tags>
+        <tag>标签1</tag>
+        <tag>标签2</tag>
+        <tag>标签3</tag>
       </tags>
   </entry>
 </search>
