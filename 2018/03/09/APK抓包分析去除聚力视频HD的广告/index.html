@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"bigfog.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="前言目前视频播放类APK在播放前都会播放一段广告，短则几十秒，多则一分多钟。当然Vip会员就不会有广告播放，毕竟这也是人家重要的的收入来源。本文就用抓取流量包的方式获取到广告的url的地址，进而在播放视频时不会有广告的播放。实验所用的APK为“聚力视频HD”，这款应用没有做什么保护，分析操作起来较容易。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="APK抓包分析去除聚力视频HD的广告">
+<meta property="og:url" content="http://bigfog.github.io/2018/03/09/APK%E6%8A%93%E5%8C%85%E5%88%86%E6%9E%90%E5%8E%BB%E9%99%A4%E8%81%9A%E5%8A%9B%E8%A7%86%E9%A2%91HD%E7%9A%84%E5%B9%BF%E5%91%8A/index.html">
+<meta property="og:site_name" content="百文书屋">
+<meta property="og:description" content="前言目前视频播放类APK在播放前都会播放一段广告，短则几十秒，多则一分多钟。当然Vip会员就不会有广告播放，毕竟这也是人家重要的的收入来源。本文就用抓取流量包的方式获取到广告的url的地址，进而在播放视频时不会有广告的播放。实验所用的APK为“聚力视频HD”，这款应用没有做什么保护，分析操作起来较容易。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t1.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t2.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t3.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t4.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t5.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t6.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t7.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t8.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t9.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t10.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t11.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t12.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t13.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t14.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t15.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t16.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t17.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t18.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t19.png">
+<meta property="article:published_time" content="2018-03-09T15:49:18.000Z">
+<meta property="article:modified_time" content="2020-04-29T03:29:14.043Z">
+<meta property="article:author" content="BigFog">
+<meta property="article:tag" content="APK去广告">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t1.png">
+
+<link rel="canonical" href="http://bigfog.github.io/2018/03/09/APK%E6%8A%93%E5%8C%85%E5%88%86%E6%9E%90%E5%8E%BB%E9%99%A4%E8%81%9A%E5%8A%9B%E8%A7%86%E9%A2%91HD%E7%9A%84%E5%B9%BF%E5%91%8A/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>APK抓包分析去除聚力视频HD的广告 | 百文书屋</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">百文书屋</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">脚踏实地 砥砺前行</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://bigfog.github.io/2018/03/09/APK%E6%8A%93%E5%8C%85%E5%88%86%E6%9E%90%E5%8E%BB%E9%99%A4%E8%81%9A%E5%8A%9B%E8%A7%86%E9%A2%91HD%E7%9A%84%E5%B9%BF%E5%91%8A/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="BigFog">
+      <meta itemprop="description" content="日常学习记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="百文书屋">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          APK抓包分析去除聚力视频HD的广告
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-03-09 23:49:18" itemprop="dateCreated datePublished" datetime="2018-03-09T23:49:18+08:00">2018-03-09</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%80%86%E5%90%91%E6%8A%80%E6%9C%AF%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">逆向技术学习</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.4k</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>目前视频播放类APK在播放前都会播放一段广告，短则几十秒，多则一分多钟。当然Vip会员就不会有广告播放，毕竟这也是人家重要的的收入来源。本文就用抓取流量包的方式获取到广告的url的地址，进而在播放视频时不会有广告的播放。实验所用的APK为“聚力视频HD”，这款应用没有做什么保护，分析操作起来较容易。</p>
+<a id="more"></a>
+<h2 id="逆向分析"><a href="#逆向分析" class="headerlink" title="逆向分析"></a>逆向分析</h2><h3 id="Charles抓包环境配置"><a href="#Charles抓包环境配置" class="headerlink" title="Charles抓包环境配置"></a>Charles抓包环境配置</h3><p>抓包工具使用Charles,工具好像要收费，但网上也有破解版。使用该工具需要做一些配置。工具界面如下：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t1.png" alt="Charles界面-1"></p>
+<ol>
+<li>首先要保证手机与电脑要在同一网段内.(这里使用的是夜神模拟器)</li>
+<li>查看电脑的IP地址。打开cmd,输入ipconfig。这里本机地址是192.168.1.103<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t2.png" alt="本机IP-2"></li>
+<li>设置模拟器IP及port。<br>找到模拟器的设置，点击无线WLAN<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t3.png" alt="模拟器无线界面-3"><br>长按WiredSSID，弹出修改网络提示框。修改网络。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t4.png" alt="修改网络-4"><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t5.png" alt="修改地址及端口-5"> </li>
+<li>打开电脑Charles会出现一个提示框，点击allow即可。这样就配置好了。<h3 id="抓包分析"><a href="#抓包分析" class="headerlink" title="抓包分析"></a>抓包分析</h3><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t6.png" alt="Charles抓包界面-6"><br>打开聚力视频，会发现Charles抓了很多包，但并没有用，因为还没有播放视频。点击类似扫把的按钮，将数据包清空。再随便找一个视频打开。抓了很多包后就暂时退出此应用，不然抓包还会更多。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t7.png" alt="流量抓包-7"><br>可以看到抓了很多流量包，这时就要留意这些链接了。重点关注带有ad的链接。观察返回的json。返回图片的可以忽略。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t8.png" alt="可疑地址-8"><br>这里先看第二个链接：<a href="http://ads.data.pplive.com" target="_blank" rel="noopener">http://ads.data.pplive.com</a>.<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t9.png" alt="可以链接2-9"><br>复制链接到浏览器中，看会返回什么信息。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t10.png" alt="浏览器返回-10"><br>只是在界面上显示了个ok，并没有什么信息。这个应该不是我们要找的广告链接。<br>这里再看第一个链接：<a href="http://de.as.pptv.com。同样的将url复制到浏览器中，看返回信息。" target="_blank" rel="noopener">http://de.as.pptv.com。同样的将url复制到浏览器中，看返回信息。</a><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t11.png" alt="浏览器返回-11"><br>可以看到返回了一个xml文件，里面包含了很多信息。查看有没有MP4,flv结尾的链接。果不其然发现了一个后缀为MP4的链接。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t12.png" alt="广告视频地址-12"><br>将连接拷贝到浏览器中查看是否为刚才播放的广告。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t13.png" alt="广告界面-13"><br>这样就找到了广告链接。<h3 id="广告链接确认"><a href="#广告链接确认" class="headerlink" title="广告链接确认"></a>广告链接确认</h3>为了确认这个到底真的是不是广告链接。可以将这些域名重定向到另外一个不存在的服务地址，在链接上右键-<img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t14.png" alt="map remote-14"><br>修改域名后，点击播放手机视频，看看播放是否正常，还有没有广告播放。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t15.png" alt="广告播放-15"><br>可以看到广告已经不再播放了。可以确认这就是播放广告的链接。接下来就是源码修改了<h2 id="破解方案"><a href="#破解方案" class="headerlink" title="破解方案"></a>破解方案</h2><h3 id="签名校验检测"><a href="#签名校验检测" class="headerlink" title="签名校验检测"></a>签名校验检测</h3>签名校验，最简单的就是将apk包反编译后再回编译签名，安装。看程序能否正常运行（有广告，并没有破解）。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t16.png" alt="签名校验-16"><h3 id="破解apk"><a href="#破解apk" class="headerlink" title="破解apk"></a>破解apk</h3>使用Android killer反编译聚力视频，当然也可以使用其他的工具，个人爱好。反编译结束后，在搜索框输入链接字符串“<a href="http://de.as.pptv.com”" target="_blank" rel="noopener">http://de.as.pptv.com”</a><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t17.png" alt="android killer-17"><br>可以发现有若干相似字符，但我们要注意到抓包的路径“<a href="http://de.as.pptv.com/lkandelivery/vast/3.0draft”。好像都和ad有关。直接将所有字符串替换为空。" target="_blank" rel="noopener">http://de.as.pptv.com/lkandelivery/vast/3.0draft”。好像都和ad有关。直接将所有字符串替换为空。</a><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t18.png" alt="替换字符串-18"><br>然后保存，回编译，签名。安装。<br>看下播放视频还会不会有广告播放。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t19.png" alt="广告拦截-19"></li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>经过了抓包，分析后找到正确的链接。本文章主要是介绍抓包分析过程，所以对apk文件并没有很强的要求。爱奇艺对广告链接就封装的很好，抓包不会发现任何有关广告的链接。通过DDMS的输出才会发现广告链接，进而才会发现其广告是通过libcupid.so完成的。而且还有签名校验。搜狐视频的广告链接可以通过抓包获取到，但有签名校验的存在。因为本章节主要是介绍抓包分析，所以并不做过多介绍。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/APK%E5%8E%BB%E5%B9%BF%E5%91%8A/" rel="tag"># APK去广告</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/03/03/Android%20Studio+%E5%A4%9C%E7%A5%9E%E6%A8%A1%E6%8B%9F%E5%99%A8%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95APK/" rel="prev" title="Android Studio+夜神模拟器 动态调试APK">
+      <i class="fa fa-chevron-left"></i> Android Studio+夜神模拟器 动态调试APK
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/03/14/%E5%AE%89%E5%8D%93%E8%AE%BE%E7%BD%AE%E6%8C%89%E9%92%AE%E7%9B%91%E5%90%AC%E7%9A%84%E5%9B%9B%E7%A7%8D%E6%96%B9%E5%BC%8F/" rel="next" title="安卓设置按钮监听的四种方式">
+      安卓设置按钮监听的四种方式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zNjc1OC8xMzI5Mw=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#逆向分析"><span class="nav-number">2.</span> <span class="nav-text">逆向分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Charles抓包环境配置"><span class="nav-number">2.1.</span> <span class="nav-text">Charles抓包环境配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#抓包分析"><span class="nav-number">2.2.</span> <span class="nav-text">抓包分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#广告链接确认"><span class="nav-number">2.3.</span> <span class="nav-text">广告链接确认</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#破解方案"><span class="nav-number">3.</span> <span class="nav-text">破解方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#签名校验检测"><span class="nav-number">3.1.</span> <span class="nav-text">签名校验检测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#破解apk"><span class="nav-number">3.2.</span> <span class="nav-text">破解apk</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="BigFog"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">BigFog</p>
+  <div class="site-description" itemprop="description">日常学习记录</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">BigFog</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

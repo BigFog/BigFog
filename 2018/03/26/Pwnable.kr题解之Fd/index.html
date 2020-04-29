@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"bigfog.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="前言 作为一名专业打酱油选手参加了强网杯，结果是相当失败。大部分题目都是Pwn题，有心无力，只叹自己学艺不精，所以准备好好学习Pwn。准备长期和pwnable.kr死磕。接下来正式开始个人的Pwn之旅。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pwnable.kr题解之Fd">
+<meta property="og:url" content="http://bigfog.github.io/2018/03/26/Pwnable.kr%E9%A2%98%E8%A7%A3%E4%B9%8BFd/index.html">
+<meta property="og:site_name" content="百文书屋">
+<meta property="og:description" content="前言 作为一名专业打酱油选手参加了强网杯，结果是相当失败。大部分题目都是Pwn题，有心无力，只叹自己学艺不精，所以准备好好学习Pwn。准备长期和pwnable.kr死磕。接下来正式开始个人的Pwn之旅。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p1.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p2.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p3.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p4.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p5.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p6.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p7.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p8.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p9.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p10.png">
+<meta property="article:published_time" content="2018-03-26T09:37:00.000Z">
+<meta property="article:modified_time" content="2020-04-29T03:43:24.661Z">
+<meta property="article:author" content="BigFog">
+<meta property="article:tag" content="CTF">
+<meta property="article:tag" content="pwn">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p1.png">
+
+<link rel="canonical" href="http://bigfog.github.io/2018/03/26/Pwnable.kr%E9%A2%98%E8%A7%A3%E4%B9%8BFd/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Pwnable.kr题解之Fd | 百文书屋</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">百文书屋</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">脚踏实地 砥砺前行</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://bigfog.github.io/2018/03/26/Pwnable.kr%E9%A2%98%E8%A7%A3%E4%B9%8BFd/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="BigFog">
+      <meta itemprop="description" content="日常学习记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="百文书屋">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Pwnable.kr题解之Fd
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-03-26 17:37:00" itemprop="dateCreated datePublished" datetime="2018-03-26T17:37:00+08:00">2018-03-26</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">其他</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.8k</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
+<p>作为一名专业打酱油选手参加了强网杯，结果是相当失败。大部分题目都是Pwn题，有心无力，只叹自己学艺不精，所以准备好好学习Pwn。准备长期和<a href="http://www.pwnable.kr" target="_blank" rel="noopener">pwnable.kr</a>死磕。接下来正式开始个人的Pwn之旅。</p>
+</blockquote>
+<a id="more"></a>
+<h2 id="题目介绍"><a href="#题目介绍" class="headerlink" title="题目介绍"></a>题目介绍</h2><blockquote>
+<p>在Pwnable.kr网站注册登陆后，就可以做题了。这里是第一题Fd,显示如下：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p1.png" alt=""></p>
+<blockquote>
+<p><a href="https://youtu.be/971eZhMHQQw" target="_blank" rel="noopener">https://youtu.be/971eZhMHQQw</a>是关于这道题的视频讲解，不过是在youtube上，翻墙了才能看，不过国内也有很多题解，足够了。<br>下面是ssh的链接地址。在linux系统中用这个就可以链接，密码是guest。链接效果如下：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p2.png" alt=""></p>
+<blockquote>
+<p>不过我们想要下载源码怎么办呢？这里推荐一款连接工具：winscp,百度一下就可以下载。软件界面如下：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p3.png" alt=""></p>
+<blockquote>
+<p>登录成功界面：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p4.png" alt=""></p>
+<h2 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h2><h3 id="运行程序"><a href="#运行程序" class="headerlink" title="运行程序"></a>运行程序</h3><blockquote>
+<p>经过上面的过程我们可以获得elf文件和程序源码。但在比赛中，并不会提供程序源码，所以也不去看。先运行下程序，看看是怎么样的。将程序拷贝到linux中，先不使用ssh连接，时间久了会卡死。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p5.png" alt=""></p>
+<blockquote>
+<p>由于个人习惯，会使用file命令查看文件的有关信息，看是32/64位环境运行。然后就是添加权限运行。第一次运行提示缺少参数，第二次运行添加参数，然后报错。接下来就是分析汇编代码。</p>
+</blockquote>
+<h3 id="汇编代码分析"><a href="#汇编代码分析" class="headerlink" title="汇编代码分析"></a>汇编代码分析</h3><blockquote>
+<p>为了提高自己阅读汇编代码的能力，先不直接使用IDA。使用命令<br>objdump -d fd<br>查看代码。反汇编代码如下(仅main部分)：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p6.png" alt=""><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p7.png" alt=""></p>
+<blockquote>
+<p>简单解释下汇编代码的含义：</p>
+</blockquote>
+<blockquote>
+<p>8048494:          push   %ebp<br>8048495:      mov    %esp,%ebp<br>8048497:    push   %edi<br>8048498:    push   %esi//把ebp压入栈中,保存ebp指向目前的栈顶，把edi和esi压入栈，为了保存寄存器。<br>8048499:and    $0xfffffff0,%esp<br>804849c: sub    $0x20,%esp //开辟栈空间</p>
+</blockquote>
+<blockquote>
+<p>804849f: cmpl   $0x1,0x8$(%ebp)<br> 80484a3: jg     80484bb &lt;main+0x27&gt;<br> //0x8(%ebp)保存着输入的第一个参数，如果没有参数则不跳转。</p>
+</blockquote>
+<blockquote>
+<p>80484a5:    movl   $0x8048630, (%esp)<br> 80484ac:   call   8048380 &lt;puts@plt&gt;<br> 80484b1:   mov    $0x0, %eax<br> 80484b6:   jmp    8048559 &lt;main+0xc5&gt;  //当没有参数时的执行流，输出字符串然后跳转到最后。</p>
+</blockquote>
+<blockquote>
+<p>80484bb:    mov    0xc(%ebp),%eax//当有输入参数的执行流。<br> 80484be:   add    $0x4,%eax<br> 80484c1:    mov    (%eax),%eax<br> 80484c3:   mov    %eax,(%esp)<br> 80484c6:  call   80483d0 &lt;atoi@plt&gt; //将输入的字符串转为数字(十六进制)<br> 80484cb: sub    $0x1234, $eax //eax此刻保存着输入参数的值，十六进制值减去0x1234<br> 80484d0:    mov    %eax,0x18(%esp) //保存数据已经减去0x1234<br> 80484d4: movl    $0x0,0x1c($ %esp)<br> 80484db:    00<br> 80484dc: movl   $0x20,0x8(%esp)//第三个参数<br> 80484e3:  00<br> 80484e4: movl   $ $0x804a060,0x4(%esp)//第二个参数，保存数据的内存位置<br> 80484eb:    08<br> 80484ec: mov    0x18(%esp),%eax<br> 80484f0: mov    %eax,(%esp) //第一个参数（文件描述符）<br> 80484f3: call   8048370 &lt; read@plt&gt;//根据文件描述符来判断输入还是输出<br> 80484f8:    mov    %eax,0x1c(%esp)<br> 80484fc:   mov    $0x8048646, %edx<br> 8048501:   mov    $0x804a060,%eax<br> 8048506:    mov    $ $0xa,%ecx<br> 804850b:     mov    %edx,%esi<br> 804850d:     mov    %eax,%edi<br> 804850f:    repz cmpsb %es:(%edi),%ds:(%esi)<br> 8048511:    seta   %dl<br> 8048514:    setb   %al<br> 8048517:    mov    %edx,%ecx<br> 8048519:    sub    %al,%cl<br> 804851b:      mov    %ecx,%eax<br> 804851d:    movsbl %al,%eax<br> 8048520:    test   %eax,%eax //输入的数据和0x8048060保存的数据作对比<br> 8048522:    jne    8048548 &lt;main+0xb4&gt;//如果正确则输出flag,错误则结束<br> 8048524:    movl   $0x8048650,(%esp)<br> 804852b:   call   8048380 &lt;puts@plt&gt;<br> 8048530:    movl   $0x804865c,(%esp)<br> 8048537:    call   8048390 &lt;system@plt&gt;<br> 804853c:    movl   $0x0,(%esp)<br> 8048543:    call   80483b0 &lt;exit@plt&gt;<br> 8048548:    movl   $0x804866a,(%esp)<br> 804854f:      call   8048380 &lt;puts@plt&gt;<br> 8048554:    mov    $0x0,%eax<br> 8048559:    lea    -0x8(%ebp),%esp<br> 804855c:   pop    %esi<br> 804855d:   pop    %edi<br> 804855e:    pop    %ebp<br> 804855f:    ret  </p>
+</blockquote>
+<h3 id="文件描述符简介"><a href="#文件描述符简介" class="headerlink" title="文件描述符简介"></a>文件描述符简介</h3><table>
+<thead>
+<tr>
+<th>项文件描述符</th>
+<th align="right">缩写</th>
+<th align="center">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td align="right">STDIN</td>
+<td align="center">标准输入</td>
+</tr>
+<tr>
+<td>1</td>
+<td align="right">STDOUT</td>
+<td align="center">标准输出</td>
+</tr>
+<tr>
+<td>2</td>
+<td align="right">STDERR</td>
+<td align="center">标准错误输出</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>通俗讲解：<br>当项文件描述符为0时：可理解为要从键盘输入内存，即为和计算机交互时的输入。<br>当项文件描述符为1时：可理解为从内存显示到显示器，即为和计算机交互时的输出。<br>当项文件描述符为2时：可理解为出现错误时的输出，即为和计算机交互时出现错误会显示到显示器。</p>
+</blockquote>
+<h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><h3 id="解题"><a href="#解题" class="headerlink" title="解题"></a>解题</h3><blockquote>
+<ol>
+<li>首先要保证有一个参数，不然程序会报错。<ol start="2">
+<li>参数减去4660，等于文件描述符。</li>
+<li>文件描述符必须为0，这样才会有接下来的输入。</li>
+<li>输入会和内存中的数据进行对比。</li>
+<li>使用GDB调试可得内存作比较的内容为“LETMEWIN”<br>所以解题为先输入4660，再输入“LETMEWIN”。</li>
+</ol>
+</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>再次使用ssh连接</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p8.png" alt=""></p>
+<h3 id="IDA反编译源码"><a href="#IDA反编译源码" class="headerlink" title="IDA反编译源码"></a>IDA反编译源码</h3><blockquote>
+<p>可以使用IDA，按下F5反编译源码。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p9.png" alt=""></p>
+<blockquote>
+<p>fd.c文件代码：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p10.png" alt=""></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>这是Pwnable.kr的第一题，分析的比较细致，学到了很多知识。里面的一些东西还不太清楚，希望在以后的学习过程中能有所顿悟。</p>
+</blockquote>
+<p>个人总结，难免有错。欢迎大佬留言指正，共同交流。</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接:"></a>参考链接:</h2><p><a href="https://blog.csdn.net/xlinsist/article/details/51147212" target="_blank" rel="noopener">https://blog.csdn.net/xlinsist/article/details/51147212</a><br> <a href="https://www.cnblogs.com/orlion/p/5765339.html" target="_blank" rel="noopener">https://www.cnblogs.com/orlion/p/5765339.html</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/CTF/" rel="tag"># CTF</a>
+              <a href="/tags/pwn/" rel="tag"># pwn</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/03/15/Xposed%E6%A1%86%E6%9E%B6%E4%BD%BF%E7%94%A8%E5%88%9D%E6%8E%A2(%E4%B8%80)/" rel="prev" title="Xposed框架使用初探(一)">
+      <i class="fa fa-chevron-left"></i> Xposed框架使用初探(一)
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/03/30/IDA%E8%B0%83%E8%AF%95%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93/" rel="next" title="IDA调试动态链接库">
+      IDA调试动态链接库 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zNjc1OC8xMzI5Mw=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#题目介绍"><span class="nav-number">2.</span> <span class="nav-text">题目介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#题目分析"><span class="nav-number">3.</span> <span class="nav-text">题目分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#运行程序"><span class="nav-number">3.1.</span> <span class="nav-text">运行程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#汇编代码分析"><span class="nav-number">3.2.</span> <span class="nav-text">汇编代码分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文件描述符简介"><span class="nav-number">3.3.</span> <span class="nav-text">文件描述符简介</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解题思路"><span class="nav-number">4.</span> <span class="nav-text">解题思路</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#解题"><span class="nav-number">4.1.</span> <span class="nav-text">解题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IDA反编译源码"><span class="nav-number">4.2.</span> <span class="nav-text">IDA反编译源码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">6.</span> <span class="nav-text">参考链接:</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="BigFog"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">BigFog</p>
+  <div class="site-description" itemprop="description">日常学习记录</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">BigFog</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

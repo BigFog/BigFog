@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"bigfog.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="前言 dex是安卓平台上Dalvik虚拟机的可执行文件，相当于windows平台的exe文件。java源文件通过java编译器生成class文件，再通过dx工具转换为classes.dex文件。整体是一个索引的结构，类名，方法名，字段名都存贮在常量池中，减少了存贮空间。为什么要学习dex文件格式呢？就像了解exe病毒分析时需要知道PE文件格式一样。现在越来越多的app都使用了加固技术以防止app被">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Dex文件结构解析">
+<meta property="og:url" content="http://bigfog.github.io/2018/04/10/Dex%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="百文书屋">
+<meta property="og:description" content="前言 dex是安卓平台上Dalvik虚拟机的可执行文件，相当于windows平台的exe文件。java源文件通过java编译器生成class文件，再通过dx工具转换为classes.dex文件。整体是一个索引的结构，类名，方法名，字段名都存贮在常量池中，减少了存贮空间。为什么要学习dex文件格式呢？就像了解exe病毒分析时需要知道PE文件格式一样。现在越来越多的app都使用了加固技术以防止app被">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p1.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p2.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p3.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p4.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p5.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p6.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p7.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p8.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p9.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p10.png">
+<meta property="article:published_time" content="2018-04-10T11:20:00.000Z">
+<meta property="article:modified_time" content="2020-04-29T03:30:24.540Z">
+<meta property="article:author" content="BigFog">
+<meta property="article:tag" content="DEX结构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p1.png">
+
+<link rel="canonical" href="http://bigfog.github.io/2018/04/10/Dex%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E8%A7%A3%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Dex文件结构解析 | 百文书屋</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">百文书屋</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">脚踏实地 砥砺前行</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://bigfog.github.io/2018/04/10/Dex%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E8%A7%A3%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="BigFog">
+      <meta itemprop="description" content="日常学习记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="百文书屋">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Dex文件结构解析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-04-10 19:20:00" itemprop="dateCreated datePublished" datetime="2018-04-10T19:20:00+08:00">2018-04-10</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%90%86%E8%AE%BA%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">理论学习</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.8k</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
+<p>dex是安卓平台上Dalvik虚拟机的可执行文件，相当于windows平台的exe文件。java源文件通过java编译器生成class文件，再通过dx工具转换为classes.dex文件。整体是一个索引的结构，类名，方法名，字段名都存贮在常量池中，减少了存贮空间。为什么要学习dex文件格式呢？就像了解exe病毒分析时需要知道PE文件格式一样。现在越来越多的app都使用了加固技术以防止app被轻易反编译，当要对一个加固的恶意app分析就要了解dex文件格式。所以dex文件格式是基础中的基础。</p>
+</blockquote>
+<a id="more"></a>
+<h2 id="文件基本结构"><a href="#文件基本结构" class="headerlink" title="文件基本结构"></a>文件基本结构</h2><blockquote>
+<p>对于dex文件分析，最好用的工具就是010Editor了，因为他有模板可以分析相对应的结构。随意找一个apk，后缀改为zip后解压，将dex文件使用010Editor打开。然后使用模板进行分析，有些可能会报错(变量定义前使用local)。分析效果如下：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p1.png" alt=""></p>
+<table>
+<thead>
+<tr>
+<th align="center">类型</th>
+<th align="center">含义</th>
+<th align="center">名称</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">文件头</td>
+<td align="center">Header</td>
+<td align="center">文件头</td>
+</tr>
+<tr>
+<td align="center">索引区</td>
+<td align="center">String_ids</td>
+<td align="center">字符串索引</td>
+</tr>
+<tr>
+<td align="center">索引区</td>
+<td align="center">Type_ids</td>
+<td align="center">类型的索引</td>
+</tr>
+<tr>
+<td align="center">索引区</td>
+<td align="center">Proto_ids</td>
+<td align="center">方法原型的索引</td>
+</tr>
+<tr>
+<td align="center">索引区</td>
+<td align="center">Field_ids</td>
+<td align="center">域的索引</td>
+</tr>
+<tr>
+<td align="center">索引区</td>
+<td align="center">Method_ids</td>
+<td align="center">方法的索引</td>
+</tr>
+<tr>
+<td align="center">数据区</td>
+<td align="center">Class_dets</td>
+<td align="center">类的定义区</td>
+</tr>
+<tr>
+<td align="center">数据区</td>
+<td align="center">Data</td>
+<td align="center">数据区</td>
+</tr>
+<tr>
+<td align="center">数据区</td>
+<td align="center">Link_data</td>
+<td align="center">链接数据区</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>这里再介绍一下dex使用到的数据结构<br>| 类型       | 含义   |<br>| :——–:  | :—–:  |<br>| u1     | uint8_t， 1字节的无符号数 |<br>| u2        |   uint16_t， 2字节的无符号数  |<br>| u4      |    uint32_t，  4字节的无符号数  |<br>| u8       |   uint64_t，  8字节的无符号数   |<br>| sleb128        |    有符号LEB128，可变长度1<del>5字节    |<br>| uleb128       |    无符号LEB128，可变长度1</del>5字节    |<br>| uleb128p1      |    无符号LEB128+1，可变长度1~5字节    | </p>
+</blockquote>
+<h2 id="Header文件头"><a href="#Header文件头" class="headerlink" title="Header文件头"></a>Header文件头</h2><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p2.png" alt=""></p>
+<blockquote>
+<p>header头记录了dex文件的一些基本信息，包括魔数字段，alder校验值，sha哈希值等，这三个字段在apk加壳中会用到。下面是详细解释：</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th align="center">字段名称</th>
+<th align="center">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">magic</td>
+<td align="center">8个字节，dex 035 或者dex 036</td>
+</tr>
+<tr>
+<td align="center">checksum</td>
+<td align="center">文件校验码(校验除去magic和checksum的所有文件区域)</td>
+</tr>
+<tr>
+<td align="center">signature</td>
+<td align="center">SHA-1哈希值uint32_t，  4字节的无符号数</td>
+</tr>
+<tr>
+<td align="center">filesize</td>
+<td align="center">DEX文件大小</td>
+</tr>
+<tr>
+<td align="center">headersize</td>
+<td align="center">header大小，一般为0x70字节</td>
+</tr>
+<tr>
+<td align="center">endian  tag</td>
+<td align="center">指定运行环境的字节序，默认小端</td>
+</tr>
+<tr>
+<td align="center">linksize</td>
+<td align="center">链接段的大小, 默认为0表示静态链接</td>
+</tr>
+<tr>
+<td align="center">linkoff</td>
+<td align="center">链接段开始偏移</td>
+</tr>
+<tr>
+<td align="center">mapoff</td>
+<td align="center">DexMapList的文件偏移</td>
+</tr>
+<tr>
+<td align="center">stringsize</td>
+<td align="center">字符串列表中的字符串个数</td>
+</tr>
+<tr>
+<td align="center">stringidsoff</td>
+<td align="center">字符串列表中的字符串偏移</td>
+</tr>
+<tr>
+<td align="center">typeIdsSize</td>
+<td align="center">数据类型索引个数</td>
+</tr>
+<tr>
+<td align="center">typeIdsOff</td>
+<td align="center">数据类型索引偏移</td>
+</tr>
+<tr>
+<td align="center">protoIdsSize</td>
+<td align="center">方法原型个数</td>
+</tr>
+<tr>
+<td align="center">protoIdsOff</td>
+<td align="center">方法原型位置偏移</td>
+</tr>
+<tr>
+<td align="center">fieldIdsSize</td>
+<td align="center">字段列表中的个数</td>
+</tr>
+<tr>
+<td align="center">fieldIdsOff</td>
+<td align="center">字段列表偏移</td>
+</tr>
+<tr>
+<td align="center">methodIdsSize</td>
+<td align="center">方法列表中的个数</td>
+</tr>
+<tr>
+<td align="center">methodIdsOff</td>
+<td align="center">方法列表偏移</td>
+</tr>
+<tr>
+<td align="center">classDefsSize</td>
+<td align="center">类定义列表中的个数</td>
+</tr>
+<tr>
+<td align="center">classDefsOff</td>
+<td align="center">类定义列表偏移</td>
+</tr>
+<tr>
+<td align="center">dataSize</td>
+<td align="center">数据段的大小, 4字节对齐</td>
+</tr>
+<tr>
+<td align="center">dataOff</td>
+<td align="center">数据段偏移</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>因为很多后半部分很多都是相对应的数据个数及地址偏移。这里就以StringSize和StringOff为例。从图上可以看到Stringsize的值为3672(十进制)，也就是说有3672个字符串。打开String_ids索引区，可以看到：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p3.png" alt=""></p>
+<blockquote>
+<p>而StringOff则保存着其偏移地址，以上图为例StringOff地址值为112(0x70)。我们来到0x70处，可以看到其保存的数据索引地址为0x2f9fc。那究竟0x2f9fc地址有没有保存数据呢？</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p4.png" alt=""></p>
+<blockquote>
+<p>正好和上文的匹配。其他的也是同样道理。</p>
+</blockquote>
+<h2 id="dex-string-ids索引段-字符串"><a href="#dex-string-ids索引段-字符串" class="headerlink" title="dex string ids索引段(字符串)"></a>dex string ids索引段(字符串)</h2><blockquote>
+<p>字符串索引区描述dex文件中所有的字符串信息</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;Direct-mapped &quot;string_id_item&quot;.</span><br><span class="line">struct DexStringId </span><br><span class="line">&#123;</span><br><span class="line">    u4 stringDataOff;      &#x2F;&#x2F;file offset to string_data_item</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>而stringDataOff是一个偏移地址，他指向数据结构item string data</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct string_data_item</span><br><span class="line">&#123;</span><br><span class="line">uleb128 utf16_size;  这里用到了前面的LEB128 可变字节类型！</span><br><span class="line">ubyte data;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p5.png" alt=""></p>
+<blockquote>
+<p>这里对LEB128做一个简单介绍：LEB128是Dex中特有的用来存贮最大32位数的数据类型，其特点是由1-5个字节组成。每个字节的第一位用来表示是否用到下个字节，剩下的7位是有效位，所以第五个字节的首位要为0。有符号LEB128的符号由最后字节的有效位的最高位决定，即最后字节的第二位。<br>实现过程：</p>
+</blockquote>
+<ol>
+<li>将一个整数用的二进制表示。</li>
+<li>以四个为一组，在头部添加零，将其扩展为7的整数倍。</li>
+<li>然后按照7位一组，从最低有效位到最高有效位方向，在每组的头部添加一位构成一个字节，最高有效位添加0。</li>
+<li>然后将这组顺序进行反转，得到这一整数的LEB128编码。</li>
+</ol>
+<blockquote>
+<p>举例如下：<br>0x98765=10011000011101100101 把它补成7的倍数010011000011101100101然后按7位分组0100110  0001110  1100101然后在每组前加一位1，第一组加0得出 00100110 10001110 11100101 也就是0x268ee5</p>
+</blockquote>
+<h2 id="dex-type-ids索引区-类名-类型名称字符串"><a href="#dex-type-ids索引区-类名-类型名称字符串" class="headerlink" title="dex type ids索引区(类名/类型名称字符串)"></a>dex type ids索引区(类名/类型名称字符串)</h2><blockquote>
+<p>包括class类型，数组类型，基本类型等。其结构体描述如下：</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">struct type_ids_item</span><br><span class="line">&#123;</span><br><span class="line">    uint descriptor_idx;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="dex-proto-ids索引区-方法声明"><a href="#dex-proto-ids索引区-方法声明" class="headerlink" title="dex proto ids索引区(方法声明)"></a>dex proto ids索引区(方法声明)</h2><blockquote>
+<p>方法声明=返回类型+参数列表</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">struct DexProtoId </span><br><span class="line">&#123;</span><br><span class="line">    u4 shortyIdx;   &#x2F;* 指向DexStringId列表的索引 *&#x2F;</span><br><span class="line">    u4 returnTypeIdx;   &#x2F;* 指向DexTypeId列表的索引 *&#x2F;</span><br><span class="line">    u4 parametersOff;   &#x2F;* 指向DexTypeList的偏移 *&#x2F;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>shortyldx:方法声明字符串，由方法的返回类型与参数列表组成的一个字符串，且返回值类型位于参数列表之前。<br>returnTypeIdx：方法返回类型，指向DexTypeId列表。<br>parametersOff：指向一个DexTypeList结构体，存放了方法的参数类型。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">struct DexTypeList &#123;</span><br><span class="line">    u4 size;             &#x2F;* 接下来DexTypeItem的个数 *&#x2F;</span><br><span class="line">    DexTypeItem list[1]; &#x2F;* DexTypeItem结构 *&#x2F;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>size:DexTypeItem结构的个数，参数数量。<br>list:指向size个方法的参数。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">struct DexTypeItem &#123;</span><br><span class="line">    u2 typeIdx;    &#x2F;* 指向DexTypeId列表的索引 *&#x2F;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>typeIdx：指向DexTypeId列表，最终指向参数类型的字符串。如第三图61h(97)项在DexTypeId列表中正好指向”Landroid/content/Context;”类型字符串。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p6.png" alt=""></p>
+<h2 id="dex-field-ids索引区"><a href="#dex-field-ids索引区" class="headerlink" title="dex field ids索引区"></a>dex field ids索引区</h2><blockquote>
+<p>Dex结构中数据的全部索引值，指明了字段所在的类、字段的类型以及字段名。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct DexFieldId &#123;</span><br><span class="line">    u2 classIdx;   &#x2F;* 类的类型，指向DexTypeId列表的索引 *&#x2F;</span><br><span class="line">    u2 typeIdx;    &#x2F;* 字段类型，指向DexTypeId列表的索引 *&#x2F;</span><br><span class="line">    u4 nameIdx;    &#x2F;* 字段名，指向DexStringId列表的索引 *&#x2F;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>classIdx:表示field所属的class类型<br>typeIdx：表示本field的类型<br>nameIdx：表示本field的名称</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p7.png" alt=""></p>
+<h2 id="dex-method-ids索引区-方法"><a href="#dex-method-ids索引区-方法" class="headerlink" title="dex method ids索引区(方法)"></a>dex method ids索引区(方法)</h2><blockquote>
+<p>该段索引了dex文件引用的所有方法。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct DexMethodId &#123;</span><br><span class="line">    u2 classIdx;  &#x2F;* 类的类型，指向DexTypeId列表的索引 *&#x2F;</span><br><span class="line">    u2 protoIdx;  &#x2F;* 声明类型，指向DexProtoId列表的索引 *&#x2F;</span><br><span class="line">    u4 nameIdx;   &#x2F;* 方法名，指向DexStringId列表的索引 *&#x2F;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>classIdx:表示方法所属类的类型<br>protoIdx:表示方法的原型<br>nameIdx:表示方法的名称</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p8.png" alt=""></p>
+<h2 id="dex-class-defs数据区-定义"><a href="#dex-class-defs数据区-定义" class="headerlink" title="dex class defs数据区(定义)"></a>dex class defs数据区(定义)</h2><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p9.png" alt=""></p>
+<blockquote>
+<p>这个数据区结构比较复杂，有些数据直接指向了data区。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">struct DexClassDef &#123;</span><br><span class="line">    u4 classIdx;    &#x2F;* 类的类型，指向DexTypeId列表的索引 *&#x2F;</span><br><span class="line">    u4 accessFlags; &#x2F;* 访问标志 *&#x2F;</span><br><span class="line">    u4 superclassIdx;  &#x2F;* 父类类型，指向DexTypeId列表的索引 *&#x2F;</span><br><span class="line">    u4 interfacesOff; &#x2F;* 接口，指向DexTypeList的偏移 *&#x2F;</span><br><span class="line">    u4 sourceFileIdx; &#x2F;* 源文件名，指向DexStringId列表的索引 *&#x2F;</span><br><span class="line">    u4 annotationsOff; &#x2F;* 注解，指向DexAnnotationsDirectoryItem结构 *&#x2F;</span><br><span class="line">    u4 classDataOff;   &#x2F;* 指向DexClassData结构的偏移 *&#x2F;</span><br><span class="line">    u4 staticValuesOff;  &#x2F;* 指向DexEncodedArray结构的偏移 *&#x2F;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>classIdx:表示类的类型。<br>accessFlags：类的访问标志，它是以ACC_开头的一个枚举值。<br>superclassIdx：父类类型索引值。<br>interfacesOff:如果类中含有接口声明或实现，interfaceOff会指向一个DexTypeList结构，否则这里的值为0。<br>sourceFileIdx:字符串索引值，表示类所在的源文件名称。<br>annotationsOff:指向注解目录结构，根据类型不同会有注解类、注解方法、注解字段与注解参数，如果类中没有注解，这里的值则为0。<br>classDataOff:指向DexClassData结构，它是类的数据部分。<br>staticValuesOff:指向DexEncodedArray结构，记录了类中的静态数据。<br>item class data结构体</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180409/p10.png" alt=""></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">struct DexClassDataHeader &#123;</span><br><span class="line">    u4 staticFieldsSize;  &#x2F;* 静态字段个数 *&#x2F;</span><br><span class="line">    u4 instanceFieldsSize; &#x2F;* 实例字段个数 *&#x2F;</span><br><span class="line">    u4 directMethodsSize;  &#x2F;* 直接方法个数 *&#x2F;</span><br><span class="line">    u4 virtualMethodsSize; &#x2F;* 虚方法个数 *&#x2F;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>对于dex的学习还不够深，对最后一部分的分析不彻底。看了很多大佬们的博客，都写得很好。以后有时间再对dex文件格式进行研究学习。</p>
+</blockquote>
+<p>个人拙见，如有错误可指正，欢迎留言交流。</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接:"></a>参考链接:</h2><p><a href="https://blog.csdn.net/feglass/article/details/51761902" target="_blank" rel="noopener">https://blog.csdn.net/feglass/article/details/51761902</a><br><a href="https://www.cnblogs.com/Cnforce/p/3817911.html" target="_blank" rel="noopener">https://www.cnblogs.com/Cnforce/p/3817911.html</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/DEX%E7%BB%93%E6%9E%84/" rel="tag"># DEX结构</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/03/31/Pwnable.kr%E9%A2%98%E8%A7%A3%E4%B9%8Bcol/" rel="prev" title="Pwnable.kr题解之col">
+      <i class="fa fa-chevron-left"></i> Pwnable.kr题解之col
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/04/15/Apk%E8%84%B1%E5%A3%B3%E7%AE%80%E4%BB%8B/" rel="next" title="APK脱壳简介">
+      APK脱壳简介 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zNjc1OC8xMzI5Mw=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文件基本结构"><span class="nav-number">2.</span> <span class="nav-text">文件基本结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Header文件头"><span class="nav-number">3.</span> <span class="nav-text">Header文件头</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dex-string-ids索引段-字符串"><span class="nav-number">4.</span> <span class="nav-text">dex string ids索引段(字符串)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dex-type-ids索引区-类名-类型名称字符串"><span class="nav-number">5.</span> <span class="nav-text">dex type ids索引区(类名&#x2F;类型名称字符串)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dex-proto-ids索引区-方法声明"><span class="nav-number">6.</span> <span class="nav-text">dex proto ids索引区(方法声明)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dex-field-ids索引区"><span class="nav-number">7.</span> <span class="nav-text">dex field ids索引区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dex-method-ids索引区-方法"><span class="nav-number">8.</span> <span class="nav-text">dex method ids索引区(方法)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dex-class-defs数据区-定义"><span class="nav-number">9.</span> <span class="nav-text">dex class defs数据区(定义)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">10.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">11.</span> <span class="nav-text">参考链接:</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="BigFog"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">BigFog</p>
+  <div class="site-description" itemprop="description">日常学习记录</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">BigFog</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>
