@@ -1,6 +1,430 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>CVE-2011-0104漏洞分析</title>
+    <url>/2018/07/25/CVE-2011-0104%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<h2 id="漏洞描述"><a href="#漏洞描述" class="headerlink" title="漏洞描述"></a>漏洞描述</h2><blockquote>
+<p>CVE-2011-0104是microsoft excel在解析XLB文件时导致的一个溢出。xlb文件是Excel表格里面的一个设置文件，通常记录用户的操作，并非恶意文件。溢出可导致执行任意代码。本文在分析漏洞的基础上，简单利用漏洞弹出计算器。</p>
+</blockquote>
+<a id="more"></a>
+<h2 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h2><blockquote>
+<p>系统：Windows xp pro sp2<br>软件：windows office 2003<br>调试器：immunity Debugger<br>Poc生成：漏洞战争配套资料</p>
+</blockquote>
+<h2 id="调试分析"><a href="#调试分析" class="headerlink" title="调试分析"></a>调试分析</h2><ul>
+<li>打开一个空白的excel程序</li>
+<li>打开immunity Debugger,附加excel进程</li>
+<li>按下F9将程序运行起来。</li>
+<li>在打开的excel中使用file–&gt;open打开配套资料中的exploit.xlb文件。</li>
+</ul>
+<blockquote>
+<p>异常触发：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/1.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>可以看到异常是一个访问异常。这时要查找异常产生的源头。向上查看代码，重点关注</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">push ebp</span><br><span class="line">mov ebp,esp</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>以上两个代码是函数开始处的常规操作，向上找可以发现0x300ce252地址处为函数开始。这个就是出错函数的起始位置 </p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/2.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>再次重新加载程序，在0x300ce252地址处下断点，并对esp栈顶内存下写入断点。这里对此做一个解释，为什么下这个断点呢。因为漏洞在复制数据时会覆盖此地址，此地址是调用0x300ce252函数的返回地址。一旦数据覆盖进行写入操作，就会触发断点，这就定位到了异常出错位置。</p>
+</blockquote>
+<ul>
+<li>打开一个空白的excel程序</li>
+<li>打开immunity Debugger,附加excel进程</li>
+<li>使用bp 300ce252命令下断点。</li>
+<li>按下F9将程序运行起来。</li>
+<li>在打开的excel中使用file–&gt;open打开配套资料中的exploit.xlb文件。</li>
+<li>程序断下</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/3.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>内存断点下好后，F9运行，可以看到程序停在了0x300ce3c8地址处，又是一个复制数据出错。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/4.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>观察寄存器ebp和edi,之间的大小就是允许复制的数据。计算可得为0x60字节大小。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/5.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>分析可知复制了96个字节，edi的值递增覆盖到栈顶0x13aa90,后面利用的跳板地址。单步运行到程序末尾处，返回可以发现是出错复制代码位于call 0x300ce380中。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/6.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>为了后面更好的搞清楚栈的覆盖和漏洞利用，有必要梳理下函数调用关系。<br><strong>1.</strong>首先定位在0x300ce252,单步运行程序，一步步通过观察堆栈内容是否覆盖来判断程序调用流程。再次重新加载程序。加载过程同上。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/7.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>经过0x302188d8地址处的call excel.306deefe后，栈区被一些乱七八糟的数据填充。可以判断，异常位于这个call中。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/8.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p><strong>2.</strong>下面要做的就是重新加载程序，在0x302188d8地址处下断点，然后进入call深入分析。<br>进入函数中可以看到。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/9.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>梳理总结下流程。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/10.png" alt="cve-2011-0104"></p>
+<h2 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h2><blockquote>
+<p>调试分析可以总结得到，数据覆盖的是sub_300ce252函数的返回地址。也就是栈地址0x13aa90。有了返回地址，还要注意到返回时的ret 2c指令，收回了44个空间大小的数据。这样基本就可以完成漏洞利用了。但当程序运行到0x300CE361处的MOV DWORD PTR DS:[EAX],ECX时出现访问违例：访问到一个不可写的地址0x51453844，此时EAX=0x51453844，向上回溯程序，找出EAX的赋值处，发现在0x300CE354处出现给EAX赋值的操作: MOV EAX, DWORD PTR SS:[EBP+2C]，此时EBP=0x0013AA8C,EBP+2C=0x0013AAB8,0x0013AAB8处的值恰好是0x51453844。观察栈中的数据，51453844恰好又是shellcode中的数据。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/11.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>根据栈区和样本数据中对应出现的数据，修改相应数值，并添加shellcode。即可利用。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/12.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>利用效果</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/13.png" alt="cve-2011-0104"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>这次由于时间原因，写的比较仓促可能具体细节不怎么具体。后续再补上，欢迎交流指导。</p>
+</blockquote>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2011-0104" target="_blank" rel="noopener">cve-2011-0104</a><br><a href="https://bbs.pediy.com/thread-217940.htm" target="_blank" rel="noopener">看雪的精品文章</a><br><a href="http://www.cnblogs.com/Ox9A82" target="_blank" rel="noopener">Ox9A82</a><br><a href="https://www.securityfocus.com/bid/47245" target="_blank" rel="noopener">安全焦点</a></p>
+]]></content>
+      <categories>
+        <category>漏洞分析</category>
+      </categories>
+      <tags>
+        <tag>CVE</tag>
+        <tag>文档漏洞</tag>
+        <tag>栈溢出</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>APK脱壳简介</title>
+    <url>/2018/04/15/Apk%E8%84%B1%E5%A3%B3%E7%AE%80%E4%BB%8B/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
+<p>本来题目是要定为App加固与对抗，但这样内容量就很大，而且最近的学习脱壳内容也只是其中的一小部分，所以就简单对脱壳做一些介绍。</p>
+</blockquote>
+<a id="more"></a>
+<h2 id="Apk加壳"><a href="#Apk加壳" class="headerlink" title="Apk加壳"></a>Apk加壳</h2><h3 id="什么是加壳"><a href="#什么是加壳" class="headerlink" title="什么是加壳"></a>什么是加壳</h3><blockquote>
+<p>加壳就是在二进制的程序中植入一段代码，在运行过程中优先取得程序的控制权，做一些额外的工作，多数病毒就是基于此原理：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p1.png" alt=""></p>
+<blockquote>
+<p>所谓Apk加壳，就是给目标Apk加一层保护程序，把重要数据信息隐藏起来。加壳程序可以有效 阻止对程序的反编译和逆向分析。Apk壳本质的功能就是实现类加载器。系统先执行壳代码，然后将加了密的dex进行解密操作，再加载到系统内存中运行。</p>
+</blockquote>
+<h2 id="安卓dex-加壳原理"><a href="#安卓dex-加壳原理" class="headerlink" title="安卓dex 加壳原理"></a>安卓dex 加壳原理</h2><blockquote>
+<p>加壳过程中主要有三个程序：</p>
+</blockquote>
+<ul>
+<li>需要加壳的源Apk1(未加壳的原始应用)</li>
+<li>壳程序APK2(用来解密并运行apk1程序)</li>
+<li>加密工具(将源APK1进行加密，并和壳程序APK2的dex合并成新的dex)</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p2.png" alt=""></p>
+<blockquote>
+<p>加壳示例过程：待脱壳数据位于位于脱壳程序文件尾。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p3.png" alt=""></p>
+<p>加壳过程：</p>
+<blockquote>
+<ul>
+<li>得到需要加密的apk和自己的脱壳程序apk1。</li>
+<li>利用加壳工具对源apk进行加密。把加密后的apk数据写入脱壳程序的Dex末尾，并在文件尾部添加加密数据的大小；修改脱壳程序Dex头中的checksum.signature和file_size头信息；合并得到新的Dex1文件。</li>
+<li>然后将新的Dex1文件替换原脱壳程序apk1中dex文件。生成新的apk，叫做脱壳程序apk。</li>
+</ul>
+</blockquote>
+<p>脱壳过程：</p>
+<blockquote>
+<ul>
+<li>读取Dex文件末尾数据获取待脱壳加密数据长度。</li>
+<li>从Dex文件读取脱壳数据，解密加密数据。以文件形式保存解密的数据到*.apk文件.</li>
+<li>通过DexClassLoader动态加载*.apk。</li>
+</ul>
+</blockquote>
+<h3 id="壳史"><a href="#壳史" class="headerlink" title="壳史"></a>壳史</h3><p>第一代壳：DEX加密(混淆技术)</p>
+<blockquote>
+<ul>
+<li>Dex字符串加密</li>
+<li>资源加密</li>
+<li>对抗反编译</li>
+<li>反调试</li>
+<li>自定义DexClassLoader</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>对于一些字符串加密，资源混淆的实现，不得不提ProGuard。这是一个压缩，优化，和混淆java字节码文件的免费工具。它可以删除无用的类，字段，方法和属性。可以用简短无意义的名称来命名已存在的类，字段，方法等。android studio自带了这个功能。对于反调试就比较多了，例如ptrace自身进程，检查进程运行状态，检查调试器进程，完整性校验，断点检测等，后期会对反调试内容进行深入学习研究</p>
+</blockquote>
+<p>第二代壳：Dex抽取与So加固(加壳技术)</p>
+<blockquote>
+<ul>
+<li>对抗第一代壳常见的脱壳法</li>
+<li>Dex Method代码抽取到外部（通常企业版）</li>
+<li>Dex动态加载</li>
+<li>So加密</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>类抽取常规的有隐藏dex文件和修改dex结构。隐藏dex文件是通过对目标dex文件进行整体加密或压缩方式把整个dex转换为另外一个文件存放在assert文件夹中或者其它地方，然后利用类加载器技术进行内存解密并加载运行。而修改dex结构则是抽取DexCode中的字节码指令后用零去填充，或者修改方法属性等操作，运行时在内存中做修正，修复等处理工作。</p>
+</blockquote>
+<blockquote>
+<p>关于Dex动态加载，就要提到dalvik虚拟机了。它和java虚拟机一样，在运行程序时首先需要将对应的类加载到内存中。在标准虚拟机中，类加载可以从class文件中读取，也可以是其他二进制流，这样就可以在程序运行时手动加载class，从而达到代码动态执行的目的。常用的有两个类：DexClassLoader和PathClassLoader,PathClassLoader是安卓应用中的默认加载器。<br>区别：DexClassLoader可以加载任何路径的dex/dex/jar<br>PathClassLoader只能加载data/app中的apk,也就是已经安装到手机中的apk.这个也是PathClassLoader作为默认的类加载器的原因，因为一般程序都是安装了，再打开，这时PathClassLoader就去加载指定的apk.</p>
+</blockquote>
+<p>第三代壳：Dex动态解密与So混淆(指令抽离)</p>
+<blockquote>
+<ul>
+<li>Dex Method代码动态解密</li>
+<li>So代码膨胀混淆</li>
+<li>对抗之前出现的所有脱壳法</li>
+</ul>
+</blockquote>
+<p>第四代壳：arm vmp(指令转换)</p>
+<blockquote>
+<p>vmp:用vmp加固后的还原过程比较复杂和困难，需要用大量的时间作分析。</p>
+</blockquote>
+<h3 id="壳的识别"><a href="#壳的识别" class="headerlink" title="壳的识别"></a>壳的识别</h3><p>国内提供apk加固的第三方技术公司有：</p>
+<blockquote>
+<p>娜迦  爱加密 梆梆加固 360加固保  百度加固 腾讯加固 等。<br>通过查看资料发现大多数加密后都会生成相应的特征so文件。这样就可以根据so来查壳。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th align="center">特征So文件</th>
+<th align="center">所属加固公司</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">libchaosvmp.so</td>
+<td align="center">娜迦</td>
+</tr>
+<tr>
+<td align="center">libddog.so</td>
+<td align="center">娜迦</td>
+</tr>
+<tr>
+<td align="center">libfdog.so</td>
+<td align="center">娜迦</td>
+</tr>
+<tr>
+<td align="center">libedog.so</td>
+<td align="center">娜迦企业版</td>
+</tr>
+<tr>
+<td align="center">libexec.so</td>
+<td align="center">爱加密</td>
+</tr>
+<tr>
+<td align="center">libexecmain.so</td>
+<td align="center">爱加密</td>
+</tr>
+<tr>
+<td align="center">ijiami.dat</td>
+<td align="center">爱加密</td>
+</tr>
+<tr>
+<td align="center">ijiami.ajm</td>
+<td align="center">爱加密企业版</td>
+</tr>
+<tr>
+<td align="center">libsecexe.so</td>
+<td align="center">梆梆免费版</td>
+</tr>
+<tr>
+<td align="center">libsecmain.so</td>
+<td align="center">梆梆免费版</td>
+</tr>
+<tr>
+<td align="center">libSecShell.so</td>
+<td align="center">梆梆免费版</td>
+</tr>
+<tr>
+<td align="center">libDexHelper.so</td>
+<td align="center">梆梆企业版</td>
+</tr>
+<tr>
+<td align="center">libDexHelper-x86.so</td>
+<td align="center">梆梆企业版</td>
+</tr>
+<tr>
+<td align="center">libprotectClass.so</td>
+<td align="center">360</td>
+</tr>
+<tr>
+<td align="center">libjiagu.so</td>
+<td align="center">360</td>
+</tr>
+<tr>
+<td align="center">libjiagu_art.so</td>
+<td align="center">360</td>
+</tr>
+<tr>
+<td align="center">libjiagu_x86.so</td>
+<td align="center">360</td>
+</tr>
+<tr>
+<td align="center">libegis.so</td>
+<td align="center">通付盾</td>
+</tr>
+<tr>
+<td align="center">libNSaferOnly.so</td>
+<td align="center">通付盾</td>
+</tr>
+<tr>
+<td align="center">libnqshield.so</td>
+<td align="center">网秦</td>
+</tr>
+<tr>
+<td align="center">libbaiduprotect.so</td>
+<td align="center">百度</td>
+</tr>
+<tr>
+<td align="center">aliprotect.dat</td>
+<td align="center">阿里聚安全</td>
+</tr>
+<tr>
+<td align="center">libsgmain.so</td>
+<td align="center">阿里聚安全</td>
+</tr>
+<tr>
+<td align="center">libsgsecuritybody.so</td>
+<td align="center">阿里聚安全</td>
+</tr>
+<tr>
+<td align="center">libmobisec.so</td>
+<td align="center">阿里聚安全</td>
+</tr>
+<tr>
+<td align="center">libtup.so</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">libexec.so</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">libshell.so</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">mix.dex</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">lib/armeabi/mix.dex</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">lib/armeabi/mixz.dex</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">libtosprotection.armeabi.so</td>
+<td align="center">腾讯御安全</td>
+</tr>
+<tr>
+<td align="center">libtosprotection.armeabi-v7a.so</td>
+<td align="center">腾讯御安全</td>
+</tr>
+<tr>
+<td align="center">libtosprotection.x86.so</td>
+<td align="center">腾讯御安全</td>
+</tr>
+<tr>
+<td align="center">libnesec.so</td>
+<td align="center">网易易盾</td>
+</tr>
+<tr>
+<td align="center">libAPKProtect.so</td>
+<td align="center">APKProtect</td>
+</tr>
+<tr>
+<td align="center">libkwscmm.so</td>
+<td align="center">几维安全</td>
+</tr>
+<tr>
+<td align="center">libkwscr.so</td>
+<td align="center">几维安全</td>
+</tr>
+<tr>
+<td align="center">libkwslinker.so</td>
+<td align="center">几维安全</td>
+</tr>
+<tr>
+<td align="center">libx3g.so</td>
+<td align="center">顶像科技</td>
+</tr>
+<tr>
+<td align="center">libapssec.so</td>
+<td align="center">盛大</td>
+</tr>
+<tr>
+<td align="center">librsprotect.so</td>
+<td align="center">瑞星</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>这个特点可以作为加壳厂商的特征。这样就可以得到厂商加壳的套路，脱壳也就有了破解之法。<br>这里提一下网上的一款apk查壳工具：ApkScan-PKID.其工作原理就是根据apk加壳后生成的特征文件来匹配加壳厂商的。这里给作者点个赞。</p>
+</blockquote>
+<h3 id="简单的几种脱壳方法"><a href="#简单的几种脱壳方法" class="headerlink" title="简单的几种脱壳方法"></a>简单的几种脱壳方法</h3><p><strong>内存dump法：</strong></p>
+<blockquote>
+<ul>
+<li>在内存中寻找dex 035 或者dex 036</li>
+<li>/proc/xxx/maps中查找后，手动dump<br>脚本：android-UNpacker   drizzleDumper  升级版的android-UNpacker dumpDex<br>IDA Pro+dumpDEX(脱壳代码如下)</li>
+</ul>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">static main(void)&#123;</span><br><span class="line">auto fp,begin,end,dexbyte;</span><br><span class="line">fp&#x3D;fopen(&quot;E:\\dump.dex&quot;,&quot;wb&quot;)</span><br><span class="line">begin&#x3D;0x755A9000; &#x2F;&#x2F;起始地址</span><br><span class="line">end&#x3D;begin+dex文件大小;</span><br><span class="line">for(dexbyte&#x3D;begin;dexbyte&lt;end;dexbyte++)</span><br><span class="line">    fputc(Byte(dexbyte),fp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>动态调试法</strong><br><strong>Hook方法:</strong>hook dvmDexfileOpenPratial(加载函数)<br><strong>定制系统:</strong>修改安卓源码并刷机</p>
+<blockquote>
+<p>以上是几种简单的脱壳法，具体其他的还没有研究。可参考<a href="http://www.mottoin.com/89035.html" target="_blank" rel="noopener">http://www.mottoin.com/89035.html</a></p>
+</blockquote>
+<h2 id="Apk脱壳简单示例-脚本"><a href="#Apk脱壳简单示例-脚本" class="headerlink" title="Apk脱壳简单示例(脚本)"></a>Apk脱壳简单示例(脚本)</h2><blockquote>
+<p>下面我们使用DrizzleDump脚本对360加壳的一个apk做演示。<br>工具：已root手机一部，apk为i春秋。</p>
+</blockquote>
+<h3 id="反编译app"><a href="#反编译app" class="headerlink" title="反编译app"></a>反编译app</h3><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p4.png" alt=""></p>
+<blockquote>
+<p>可以看到方法都被改为jni方法了，多亏了那两个特征so文件。</p>
+</blockquote>
+<h3 id="查壳"><a href="#查壳" class="headerlink" title="查壳"></a>查壳</h3><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p5.png" alt=""></p>
+<blockquote>
+<p>将后缀改为zip解压，在assets目录下可以看到libjiagu.so特征库。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p6.png" alt=""></p>
+<h3 id="拷贝drizzledump"><a href="#拷贝drizzledump" class="headerlink" title="拷贝drizzledump"></a>拷贝drizzledump</h3><blockquote>
+<p>将drizzledumper通过adb上传到/data/local/tmp目录</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p7.png" alt=""></p>
+<blockquote>
+<p>可以看到脚本已经上传到相应目录下了。但还没有执行权限。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">chmod 777 drizzledumper</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>然后将i春秋app运行起来，这样内存中才会有有数据。然后执行drizzleDump。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p8.png" alt=""></p>
+<blockquote>
+<p>但是没有什么效果，提示参数不够。应该加上包名，等待扫描的时间。这个扫描时间是因为多次扫描。</p>
+</blockquote>
+<h3 id="运行脚本"><a href="#运行脚本" class="headerlink" title="运行脚本"></a>运行脚本</h3><p>这次加上参数运行。</p>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p9.png" alt=""></p>
+<blockquote>
+<p>可以看到dex文件已经被dump出来了。将dex文件下载到电脑上。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p10.png" alt=""></p>
+<blockquote>
+<p>使用jdx直接反编译dex，可以看到已经有了原始g的java代码。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p11.png" alt=""></p>
+<blockquote>
+<p>关于脚本drizzleDumper工作的原理是root环境下，通过ptrace附加需要脱壳的apk进程，然后在脱壳的apk进程的内存中进行dex文件的特征搜索，当搜索到dex文件时，进行dex文件的内存dump。</p>
+</blockquote>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>最近在网上看了很多资料，很多都是参考大佬们所写博客。加壳和脱壳还有很多东西要学。还有java的反射技术在加壳中的应用，脱壳的技术还有很多种，后续还会对相应的脱壳做总结。学无止境！</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="http://blog.csdn.net/jiazhijun/article/details/8678399" target="_blank" rel="noopener">http://blog.csdn.net/jiazhijun/article/details/8678399</a><br><a href="https://blog.csdn.net/jiangwei0910410003/article/details/48415225" target="_blank" rel="noopener">https://blog.csdn.net/jiangwei0910410003/article/details/48415225</a><br><a href="http://www.mottoin.com/89035.html" target="_blank" rel="noopener">http://www.mottoin.com/89035.html</a><br><a href="https://blog.csdn.net/qq1084283172/article/details/53561622" target="_blank" rel="noopener">https://blog.csdn.net/qq1084283172/article/details/53561622</a></p>
+<p>个人拙见，错误之处请大佬指正，欢迎留言交流。</p>
+]]></content>
+      <categories>
+        <category>理论学习</category>
+      </categories>
+      <tags>
+        <tag>APK脱壳</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>APK抓包分析去除聚力视频HD的广告</title>
     <url>/2018/03/09/APK%E6%8A%93%E5%8C%85%E5%88%86%E6%9E%90%E5%8E%BB%E9%99%A4%E8%81%9A%E5%8A%9B%E8%A7%86%E9%A2%91HD%E7%9A%84%E5%B9%BF%E5%91%8A/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>目前视频播放类APK在播放前都会播放一段广告，短则几十秒，多则一分多钟。当然Vip会员就不会有广告播放，毕竟这也是人家重要的的收入来源。本文就用抓取流量包的方式获取到广告的url的地址，进而在播放视频时不会有广告的播放。实验所用的APK为“聚力视频HD”，这款应用没有做什么保护，分析操作起来较容易。</p>
@@ -22,49 +446,88 @@
       </tags>
   </entry>
   <entry>
-    <title>Android Studio+夜神模拟器 动态调试APK</title>
-    <url>/2018/03/03/Android%20Studio+%E5%A4%9C%E7%A5%9E%E6%A8%A1%E6%8B%9F%E5%99%A8%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95APK/</url>
-    <content><![CDATA[<h2 id="1-smali文件格式"><a href="#1-smali文件格式" class="headerlink" title="1 smali文件格式"></a>1 smali文件格式</h2><table>
-<thead>
-<tr>
-<th align="left">头部定义</th>
-<th align="center">域定义</th>
-<th align="right">函数定义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">.class</td>
-<td align="center">.field public</td>
-<td align="right">.method</td>
-</tr>
-<tr>
-<td align="left">.super</td>
-<td align="center">.field static</td>
-<td align="right">instruction</td>
-</tr>
-<tr>
-<td align="left">.source</td>
-<td align="center">.field private</td>
-<td align="right">.endmethod</td>
-</tr>
-</tbody></table>
+    <title>Xposed框架使用初探(一)</title>
+    <url>/2018/03/15/Xposed%E6%A1%86%E6%9E%B6%E4%BD%BF%E7%94%A8%E5%88%9D%E6%8E%A2(%E4%B8%80)/</url>
+    <content><![CDATA[<h2 id="Hook简介"><a href="#Hook简介" class="headerlink" title="Hook简介"></a>Hook简介</h2><blockquote>
+<p>Hook英文翻译即为钩子。windows下的Hook是一种消息处理机制。每当特定的消息发出，在没有到达目的窗口前，钩子程序就先捕获该消息，即钩子函数先得到控制权，这时钩子函数就可以对消息进行加工处理。它其实是一个处理消息的程序段。当然在安卓系统中也有Hook技术，和windows下的Hook类似，也是在事件传送到终点前截获并监控事件的传输，并对所钩上的事件作出相应的处理。</p>
+</blockquote>
 <a id="more"></a>
-
-<h2 id="2-准备"><a href="#2-准备" class="headerlink" title="2 准备"></a>2 准备</h2><p>Android studio（简称AS）<br>smalidea-0.05.zip(插件)<br>android killer(修改smali文件)<br>夜神模拟器<br>实验程序 crakme02.apk</p>
-<h3 id="2-1-修改AndroidManifest-xml"><a href="#2-1-修改AndroidManifest-xml" class="headerlink" title="2.1 修改AndroidManifest.xml"></a>2.1 修改AndroidManifest.xml</h3><p>使用apktool.jar反编译apk。命令：java -jar apktool.jar d -f xxx.apk<br>会生成xxx文件夹。动态调试需要在AndroidManifest.xml添加可调试属性android:debuggable=”true”<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p1.jpg" alt="xml表"><br>修改后同样使用apktool.jar进行回编译。命令：java -jar apktool.jar b -f xxx.apk（未签名）<br>打包后的apk并没有签名。可以使用jdk自带的keytool生成keystore,然后使用jarsigner进行签名。<br>以上过程可以使用一些工具来进行修改。反编译后的xxx文件夹是加载到android studio中的源代码。回编译的apk是安装在夜神模拟器中的。</p>
-<h3 id="2-2-AS安装smalidea插件"><a href="#2-2-AS安装smalidea插件" class="headerlink" title="2.2 AS安装smalidea插件"></a>2.2 AS安装smalidea插件</h3><p>这里的smalidea-0.05.zip插件是下载好的。<br>依次点击File–&gt;setting–&gt;Plugins点击<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p2.jpg" alt="安装选取"><br>从磁盘安装后点击apply–&gt;ok–&gt;重启即可</p>
-<h3 id="2-3-夜神模拟器连接DDMS"><a href="#2-3-夜神模拟器连接DDMS" class="headerlink" title="2.3 夜神模拟器连接DDMS"></a>2.3 夜神模拟器连接DDMS</h3><ol>
-<li>启动模拟器</li>
-<li>cd进入到夜神安装bin目录下，执行命令nox_adb.exe connect 127.0.0.1:62001</li>
-<li>如果命令执行错误。可能是nox_adb.exe版本不对，下载相应版本的替换即可。<br>我这里是配合了环境变量，并将nox_adb.exe connect 127.0.0.1:62001命令做成一个bat。直接运行图方便。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p4.jpg" alt="启动模拟器"><br><strong>模拟器启动后安装回编译并签名的apk</strong><h2 id="3-调试"><a href="#3-调试" class="headerlink" title="3 调试"></a>3 调试</h2><h3 id="3-1-导入源码"><a href="#3-1-导入源码" class="headerlink" title="3.1 导入源码"></a>3.1 导入源码</h3>将反编译的xxx文件夹加载到AS，类似加载一个安卓工程（导入….）界面如下:<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p5.jpg" alt="源码导入"><h3 id="3-2-设置远程调试"><a href="#3-2-设置远程调试" class="headerlink" title="3.2 设置远程调试"></a>3.2 设置远程调试</h3>打开AS，依次点击Run–&gt;edit configurations如图示：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p6.jpg" alt="配置远程调试"><br>点击+号，添加remote配置。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p7.jpg" alt="添加远程"><br>项目名字随便填，其余地方已用箭头标记<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p8.jpg" alt="配置端口"><h3 id="3-3-打开-Android-device-Monitor"><a href="#3-3-打开-Android-device-Monitor" class="headerlink" title="3.3 打开 Android device Monitor"></a>3.3 打开 Android device Monitor</h3><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p9.jpg" alt="打开ddms"><br>因为模拟器上没有运行什么应用，所以列表中并没有什么应用显示<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p10.jpg" alt="程序列表显示"><h3 id="3-4-下断点并开启调试"><a href="#3-4-下断点并开启调试" class="headerlink" title="3.4 下断点并开启调试"></a>3.4 下断点并开启调试</h3>这是一个检测输入是否正确的apk，所以断点就下到checkSN函数处，在代码最左边单击即可。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p11.jpg" alt="下调试断点"><br>打开cmd  输入 <code>adb shell am start -D -n com.droider.crackme0201/.MainActivity（包名/启动主activity）</code><br>然后模拟器会显示等待调试的弹出框<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p12.jpg" alt="启动调试"><br>接下来就是在AS中启动程序了Run—&gt;debug<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p13.jpg" alt="运行程序"><br>DDMS中也会显示调试程序包名<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p14.jpg" alt="ddms显示"><br>可以看到模拟器已经在程序中启动，而且ddms中红色的甲壳虫也变绿。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p15.png" alt="模拟器显示"><br>接下来我们随意输入，将程序停在所下断点处。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p16.png" alt="断点处"><br>可以看到断点已经停下。后续单步调试，查看变量等操作在这里就不介绍。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p17.png" alt="变量显示"><br>个人总结过程，仅供参考。</li>
+<h2 id="xposed框架"><a href="#xposed框架" class="headerlink" title="xposed框架"></a>xposed框架</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><blockquote>
+<p>Xposed框架是一款对安卓平台的HOOK框架，可以在不修改APK的情况下修改程序的框架服务。通过替换/system/bin/app_process程序控制Zygote进程，从而使app_process在启动过程中加载XposedBridge.jar这个jar包。Zygote进程在启动过程中，会创建一个Dalvik虚拟机实例，还会把java运行时库加载到进程中来，以及注册一些Android核心类的JNI方法来前面创建的Dalvik虚拟机实例中去，应用程序进程会与Zygote一起共享Java运行时库。这就是XposedBridge.jar包可以加载的原因。</p>
+</blockquote>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><blockquote>
+<p>Xposed框架本质只是一个apk应用，可安装到手机。相应模块(Hook代码)就需要我们去编写，模块也是apk文件。</p>
+</blockquote>
+<ol>
+<li><p>手机必须是具有Root权限的。Root是有一定风险的。所以这里使用的是模拟器。</p>
+</li>
+<li><p>实验设备：夜神模拟器+Android4.4.2+XposedInstall.apk(v2.7)+XposedBridge.jar-54。</p>
+</li>
+<li><p>Xposed框架安装效果如下：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p1.png" alt="效果图-1"></p>
+<h2 id="Xposed使用示例"><a href="#Xposed使用示例" class="headerlink" title="Xposed使用示例"></a>Xposed使用示例</h2><h3 id="需要被Hook的程序"><a href="#需要被Hook的程序" class="headerlink" title="需要被Hook的程序"></a>需要被Hook的程序</h3><blockquote>
+<p>程序界面如下</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p2.png" alt="界面-2"></p>
+<blockquote>
+<p>源代码如下:</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p3.jpg" alt="源代码-3"></p>
+<blockquote>
+<p>源代码逻辑很简单，输入一段字符串，然后在compare函数中比较。根据返回值判断输入是否正确。因为这只是做一个示例，compare函数中直接用了equals函数来比较。在代码编程中这是很愚蠢的做法，强烈不建议这种写法。<br>如果想让程序返回正确的值，只要将compare的返回值为true即可。我们这里Hook的就是compare函数，不管输入任意字符，都会显示返回成功。</p>
+</blockquote>
+<h3 id="Hook关键函数介绍"><a href="#Hook关键函数介绍" class="headerlink" title="Hook关键函数介绍"></a>Hook关键函数介绍</h3><blockquote>
+<p>IXposedHookLoadPackage类：加载回调接口，在Xposed入口类继承，实现handleLoadPackage方法。<br>handleLoadPackage：这个方法用于在加载应用程序的包的时候执行用户的操作。<br>findAndHookMethod(String className, ClassLoader classLoader, String methodName, Object… parameterTypesAndCallback) hook一个类中的方法<br>参数:<br>className: 要hook的方法的所在类<br>classloader: 要hook的包的classLoader，一般都写loadPackageParam.classLoader<br>methodName: 要hook的方法<br>parameterTypesAndCallback: 方法的参数和监听器。</p>
+</blockquote>
+<h3 id="导入lib文件"><a href="#导入lib文件" class="headerlink" title="导入lib文件"></a>导入lib文件</h3><blockquote>
+<p>新建安卓项目，这个应该很简单。需要导入jar文件-XposedBridgeApi-54.jar。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p4.png" alt="结构图-4"></p>
+</li>
 </ol>
+<blockquote>
+<p>新建文件夹，命名为lib,然后将XposedBridgeApi-54.jar复制过来。右键Add as library。这样就能看到里面的类了。</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p5.png" alt="结构图-5"></p>
+<blockquote>
+<p>然后修改build.gradle文件，将compile改为provided。</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p6.jpg" alt="结构图-6"></p>
+<h3 id="AndroidManifest-xml文件修改"><a href="#AndroidManifest-xml文件修改" class="headerlink" title="AndroidManifest.xml文件修改"></a>AndroidManifest.xml文件修改</h3><p>需要在配置文件中添加一些属性。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;application&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedmodule&quot; android:value&#x3D;&quot;true&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposeddescription&quot; android:value&#x3D;&quot;模块第一次测试&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedminversion&quot; android:value&#x3D;&quot;54&quot;&#x2F;&gt;</span><br><span class="line">&lt;&#x2F;application&gt;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>xposedmodule:判断是否是xposed模块，xposed根据这个来判断是否是模块。<br>xposeddescription：模块描述，会显示在xposed框架模块列表中。<br>xposedminversion：最低xposed版本号，lib文件名可知。</p>
+</blockquote>
+<h3 id="入口类编写"><a href="#入口类编写" class="headerlink" title="入口类编写"></a>入口类编写</h3><blockquote>
+<p>创建一个类，实现IXposedHookLoadPackage借口，重写handLoadPackage方法，这里创建了一个xposedmain类。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class xposedmain implements IXposedHookLoadPackage &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam Param) throws Throwable &#123;</span><br><span class="line">        if(Param.packageName.equals(&quot;com.example.zzwbi.check&quot;))&#x2F;&#x2F;匹配包名</span><br><span class="line">        &#123;</span><br><span class="line">            XposedBridge.log(&quot;Loaded APP:&quot;+Param.packageName);&#x2F;&#x2F;XposedBridge.log相当于日志输出。</span><br><span class="line">            try &#123;</span><br><span class="line">                findAndHookMethod(&quot;com.example.zzwbi.check.MainActivity&quot;, Param.classLoader, &quot;compare&quot;, String.class, new get_True());</span><br><span class="line">                                  &#x2F;&#x2F;类名，一般都写Param.classLoader,方法名，参数...,hook的方法</span><br><span class="line">            &#125; catch (Exception e) &#123;</span><br><span class="line">                XposedBridge.log(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">class get_True extends XC_MethodHook &#123;</span><br><span class="line">    protected void beforeHookedMethod(XC_MethodHook.MethodHookParam param) throws Throwable &#123;</span><br><span class="line">        XposedBridge.log(&quot;beforeHookedMethod userName:&quot; + param.args[0]);</span><br><span class="line">        &#x2F;&#x2F;hook前的一些操作</span><br><span class="line">    &#125;</span><br><span class="line">    protected void afterHookedMethod(XC_MethodHook.MethodHookParam args) throws Throwable &#123;</span><br><span class="line">        &#x2F;&#x2F;hook后的一些操作</span><br><span class="line">        args.setResult(true);</span><br><span class="line">        XposedBridge.log(&quot;使返回值为true&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="设置启动入口"><a href="#设置启动入口" class="headerlink" title="设置启动入口"></a>设置启动入口</h3><blockquote>
+<p>新建assets文件夹,在里面新建文件名为xposed_init,写入你自己创建的xposedmain类包名。</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p7.png" alt="启动入口-7"></p>
+<blockquote>
+<p>包名+类名</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p8.png" alt="示意图-8"></p>
+<h3 id="安装激活插件"><a href="#安装激活插件" class="headerlink" title="安装激活插件"></a>安装激活插件</h3><blockquote>
+<p>将apk安装到模拟器上，重启后即可看到插件效果。</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p9.png" alt="启用插件-9"></p>
+<blockquote>
+<p>下面看下hook效果</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p10.png" alt="Hook成功-10"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>这只是对于Xposed学习的一次小尝试。对于其Hook还有很多地方要学习。例如静态field变量,隐藏函数，内部类，匿名内部类，构造函数的Hook都要继续研究。</p>
+</blockquote>
+<p>####参考链接:<br><a href="http://blog.csdn.net/jiabailong/article/details/52368002" target="_blank" rel="noopener">http://blog.csdn.net/jiabailong/article/details/52368002</a><br> <a href="http://blog.csdn.net/wxyyxc1992/article/details/17320911" target="_blank" rel="noopener">http://blog.csdn.net/wxyyxc1992/article/details/17320911</a><br><a href="http://www.freebuf.com/articles/terminal/114910.html" target="_blank" rel="noopener">http://www.freebuf.com/articles/terminal/114910.html</a></p>
 ]]></content>
       <categories>
         <category>逆向技术学习</category>
       </categories>
       <tags>
         <tag>Android</tag>
-        <tag>夜神模拟器</tag>
+        <tag>Xposed</tag>
       </tags>
   </entry>
   <entry>
@@ -415,512 +878,49 @@
       </tags>
   </entry>
   <entry>
-    <title>APK脱壳简介</title>
-    <url>/2018/04/15/Apk%E8%84%B1%E5%A3%B3%E7%AE%80%E4%BB%8B/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
-<p>本来题目是要定为App加固与对抗，但这样内容量就很大，而且最近的学习脱壳内容也只是其中的一小部分，所以就简单对脱壳做一些介绍。</p>
-</blockquote>
-<a id="more"></a>
-<h2 id="Apk加壳"><a href="#Apk加壳" class="headerlink" title="Apk加壳"></a>Apk加壳</h2><h3 id="什么是加壳"><a href="#什么是加壳" class="headerlink" title="什么是加壳"></a>什么是加壳</h3><blockquote>
-<p>加壳就是在二进制的程序中植入一段代码，在运行过程中优先取得程序的控制权，做一些额外的工作，多数病毒就是基于此原理：</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p1.png" alt=""></p>
-<blockquote>
-<p>所谓Apk加壳，就是给目标Apk加一层保护程序，把重要数据信息隐藏起来。加壳程序可以有效 阻止对程序的反编译和逆向分析。Apk壳本质的功能就是实现类加载器。系统先执行壳代码，然后将加了密的dex进行解密操作，再加载到系统内存中运行。</p>
-</blockquote>
-<h2 id="安卓dex-加壳原理"><a href="#安卓dex-加壳原理" class="headerlink" title="安卓dex 加壳原理"></a>安卓dex 加壳原理</h2><blockquote>
-<p>加壳过程中主要有三个程序：</p>
-</blockquote>
-<ul>
-<li>需要加壳的源Apk1(未加壳的原始应用)</li>
-<li>壳程序APK2(用来解密并运行apk1程序)</li>
-<li>加密工具(将源APK1进行加密，并和壳程序APK2的dex合并成新的dex)</li>
-</ul>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p2.png" alt=""></p>
-<blockquote>
-<p>加壳示例过程：待脱壳数据位于位于脱壳程序文件尾。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p3.png" alt=""></p>
-<p>加壳过程：</p>
-<blockquote>
-<ul>
-<li>得到需要加密的apk和自己的脱壳程序apk1。</li>
-<li>利用加壳工具对源apk进行加密。把加密后的apk数据写入脱壳程序的Dex末尾，并在文件尾部添加加密数据的大小；修改脱壳程序Dex头中的checksum.signature和file_size头信息；合并得到新的Dex1文件。</li>
-<li>然后将新的Dex1文件替换原脱壳程序apk1中dex文件。生成新的apk，叫做脱壳程序apk。</li>
-</ul>
-</blockquote>
-<p>脱壳过程：</p>
-<blockquote>
-<ul>
-<li>读取Dex文件末尾数据获取待脱壳加密数据长度。</li>
-<li>从Dex文件读取脱壳数据，解密加密数据。以文件形式保存解密的数据到*.apk文件.</li>
-<li>通过DexClassLoader动态加载*.apk。</li>
-</ul>
-</blockquote>
-<h3 id="壳史"><a href="#壳史" class="headerlink" title="壳史"></a>壳史</h3><p>第一代壳：DEX加密(混淆技术)</p>
-<blockquote>
-<ul>
-<li>Dex字符串加密</li>
-<li>资源加密</li>
-<li>对抗反编译</li>
-<li>反调试</li>
-<li>自定义DexClassLoader</li>
-</ul>
-</blockquote>
-<blockquote>
-<p>对于一些字符串加密，资源混淆的实现，不得不提ProGuard。这是一个压缩，优化，和混淆java字节码文件的免费工具。它可以删除无用的类，字段，方法和属性。可以用简短无意义的名称来命名已存在的类，字段，方法等。android studio自带了这个功能。对于反调试就比较多了，例如ptrace自身进程，检查进程运行状态，检查调试器进程，完整性校验，断点检测等，后期会对反调试内容进行深入学习研究</p>
-</blockquote>
-<p>第二代壳：Dex抽取与So加固(加壳技术)</p>
-<blockquote>
-<ul>
-<li>对抗第一代壳常见的脱壳法</li>
-<li>Dex Method代码抽取到外部（通常企业版）</li>
-<li>Dex动态加载</li>
-<li>So加密</li>
-</ul>
-</blockquote>
-<blockquote>
-<p>类抽取常规的有隐藏dex文件和修改dex结构。隐藏dex文件是通过对目标dex文件进行整体加密或压缩方式把整个dex转换为另外一个文件存放在assert文件夹中或者其它地方，然后利用类加载器技术进行内存解密并加载运行。而修改dex结构则是抽取DexCode中的字节码指令后用零去填充，或者修改方法属性等操作，运行时在内存中做修正，修复等处理工作。</p>
-</blockquote>
-<blockquote>
-<p>关于Dex动态加载，就要提到dalvik虚拟机了。它和java虚拟机一样，在运行程序时首先需要将对应的类加载到内存中。在标准虚拟机中，类加载可以从class文件中读取，也可以是其他二进制流，这样就可以在程序运行时手动加载class，从而达到代码动态执行的目的。常用的有两个类：DexClassLoader和PathClassLoader,PathClassLoader是安卓应用中的默认加载器。<br>区别：DexClassLoader可以加载任何路径的dex/dex/jar<br>PathClassLoader只能加载data/app中的apk,也就是已经安装到手机中的apk.这个也是PathClassLoader作为默认的类加载器的原因，因为一般程序都是安装了，再打开，这时PathClassLoader就去加载指定的apk.</p>
-</blockquote>
-<p>第三代壳：Dex动态解密与So混淆(指令抽离)</p>
-<blockquote>
-<ul>
-<li>Dex Method代码动态解密</li>
-<li>So代码膨胀混淆</li>
-<li>对抗之前出现的所有脱壳法</li>
-</ul>
-</blockquote>
-<p>第四代壳：arm vmp(指令转换)</p>
-<blockquote>
-<p>vmp:用vmp加固后的还原过程比较复杂和困难，需要用大量的时间作分析。</p>
-</blockquote>
-<h3 id="壳的识别"><a href="#壳的识别" class="headerlink" title="壳的识别"></a>壳的识别</h3><p>国内提供apk加固的第三方技术公司有：</p>
-<blockquote>
-<p>娜迦  爱加密 梆梆加固 360加固保  百度加固 腾讯加固 等。<br>通过查看资料发现大多数加密后都会生成相应的特征so文件。这样就可以根据so来查壳。</p>
-</blockquote>
-<table>
+    <title>Android Studio+夜神模拟器 动态调试APK</title>
+    <url>/2018/03/03/Android%20Studio+%E5%A4%9C%E7%A5%9E%E6%A8%A1%E6%8B%9F%E5%99%A8%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95APK/</url>
+    <content><![CDATA[<h2 id="1-smali文件格式"><a href="#1-smali文件格式" class="headerlink" title="1 smali文件格式"></a>1 smali文件格式</h2><table>
 <thead>
 <tr>
-<th align="center">特征So文件</th>
-<th align="center">所属加固公司</th>
+<th align="left">头部定义</th>
+<th align="center">域定义</th>
+<th align="right">函数定义</th>
 </tr>
 </thead>
 <tbody><tr>
-<td align="center">libchaosvmp.so</td>
-<td align="center">娜迦</td>
+<td align="left">.class</td>
+<td align="center">.field public</td>
+<td align="right">.method</td>
 </tr>
 <tr>
-<td align="center">libddog.so</td>
-<td align="center">娜迦</td>
+<td align="left">.super</td>
+<td align="center">.field static</td>
+<td align="right">instruction</td>
 </tr>
 <tr>
-<td align="center">libfdog.so</td>
-<td align="center">娜迦</td>
-</tr>
-<tr>
-<td align="center">libedog.so</td>
-<td align="center">娜迦企业版</td>
-</tr>
-<tr>
-<td align="center">libexec.so</td>
-<td align="center">爱加密</td>
-</tr>
-<tr>
-<td align="center">libexecmain.so</td>
-<td align="center">爱加密</td>
-</tr>
-<tr>
-<td align="center">ijiami.dat</td>
-<td align="center">爱加密</td>
-</tr>
-<tr>
-<td align="center">ijiami.ajm</td>
-<td align="center">爱加密企业版</td>
-</tr>
-<tr>
-<td align="center">libsecexe.so</td>
-<td align="center">梆梆免费版</td>
-</tr>
-<tr>
-<td align="center">libsecmain.so</td>
-<td align="center">梆梆免费版</td>
-</tr>
-<tr>
-<td align="center">libSecShell.so</td>
-<td align="center">梆梆免费版</td>
-</tr>
-<tr>
-<td align="center">libDexHelper.so</td>
-<td align="center">梆梆企业版</td>
-</tr>
-<tr>
-<td align="center">libDexHelper-x86.so</td>
-<td align="center">梆梆企业版</td>
-</tr>
-<tr>
-<td align="center">libprotectClass.so</td>
-<td align="center">360</td>
-</tr>
-<tr>
-<td align="center">libjiagu.so</td>
-<td align="center">360</td>
-</tr>
-<tr>
-<td align="center">libjiagu_art.so</td>
-<td align="center">360</td>
-</tr>
-<tr>
-<td align="center">libjiagu_x86.so</td>
-<td align="center">360</td>
-</tr>
-<tr>
-<td align="center">libegis.so</td>
-<td align="center">通付盾</td>
-</tr>
-<tr>
-<td align="center">libNSaferOnly.so</td>
-<td align="center">通付盾</td>
-</tr>
-<tr>
-<td align="center">libnqshield.so</td>
-<td align="center">网秦</td>
-</tr>
-<tr>
-<td align="center">libbaiduprotect.so</td>
-<td align="center">百度</td>
-</tr>
-<tr>
-<td align="center">aliprotect.dat</td>
-<td align="center">阿里聚安全</td>
-</tr>
-<tr>
-<td align="center">libsgmain.so</td>
-<td align="center">阿里聚安全</td>
-</tr>
-<tr>
-<td align="center">libsgsecuritybody.so</td>
-<td align="center">阿里聚安全</td>
-</tr>
-<tr>
-<td align="center">libmobisec.so</td>
-<td align="center">阿里聚安全</td>
-</tr>
-<tr>
-<td align="center">libtup.so</td>
-<td align="center">腾讯</td>
-</tr>
-<tr>
-<td align="center">libexec.so</td>
-<td align="center">腾讯</td>
-</tr>
-<tr>
-<td align="center">libshell.so</td>
-<td align="center">腾讯</td>
-</tr>
-<tr>
-<td align="center">mix.dex</td>
-<td align="center">腾讯</td>
-</tr>
-<tr>
-<td align="center">lib/armeabi/mix.dex</td>
-<td align="center">腾讯</td>
-</tr>
-<tr>
-<td align="center">lib/armeabi/mixz.dex</td>
-<td align="center">腾讯</td>
-</tr>
-<tr>
-<td align="center">libtosprotection.armeabi.so</td>
-<td align="center">腾讯御安全</td>
-</tr>
-<tr>
-<td align="center">libtosprotection.armeabi-v7a.so</td>
-<td align="center">腾讯御安全</td>
-</tr>
-<tr>
-<td align="center">libtosprotection.x86.so</td>
-<td align="center">腾讯御安全</td>
-</tr>
-<tr>
-<td align="center">libnesec.so</td>
-<td align="center">网易易盾</td>
-</tr>
-<tr>
-<td align="center">libAPKProtect.so</td>
-<td align="center">APKProtect</td>
-</tr>
-<tr>
-<td align="center">libkwscmm.so</td>
-<td align="center">几维安全</td>
-</tr>
-<tr>
-<td align="center">libkwscr.so</td>
-<td align="center">几维安全</td>
-</tr>
-<tr>
-<td align="center">libkwslinker.so</td>
-<td align="center">几维安全</td>
-</tr>
-<tr>
-<td align="center">libx3g.so</td>
-<td align="center">顶像科技</td>
-</tr>
-<tr>
-<td align="center">libapssec.so</td>
-<td align="center">盛大</td>
-</tr>
-<tr>
-<td align="center">librsprotect.so</td>
-<td align="center">瑞星</td>
+<td align="left">.source</td>
+<td align="center">.field private</td>
+<td align="right">.endmethod</td>
 </tr>
 </tbody></table>
-<blockquote>
-<p>这个特点可以作为加壳厂商的特征。这样就可以得到厂商加壳的套路，脱壳也就有了破解之法。<br>这里提一下网上的一款apk查壳工具：ApkScan-PKID.其工作原理就是根据apk加壳后生成的特征文件来匹配加壳厂商的。这里给作者点个赞。</p>
-</blockquote>
-<h3 id="简单的几种脱壳方法"><a href="#简单的几种脱壳方法" class="headerlink" title="简单的几种脱壳方法"></a>简单的几种脱壳方法</h3><p><strong>内存dump法：</strong></p>
-<blockquote>
-<ul>
-<li>在内存中寻找dex 035 或者dex 036</li>
-<li>/proc/xxx/maps中查找后，手动dump<br>脚本：android-UNpacker   drizzleDumper  升级版的android-UNpacker dumpDex<br>IDA Pro+dumpDEX(脱壳代码如下)</li>
-</ul>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">static main(void)&#123;</span><br><span class="line">auto fp,begin,end,dexbyte;</span><br><span class="line">fp&#x3D;fopen(&quot;E:\\dump.dex&quot;,&quot;wb&quot;)</span><br><span class="line">begin&#x3D;0x755A9000; &#x2F;&#x2F;起始地址</span><br><span class="line">end&#x3D;begin+dex文件大小;</span><br><span class="line">for(dexbyte&#x3D;begin;dexbyte&lt;end;dexbyte++)</span><br><span class="line">    fputc(Byte(dexbyte),fp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>动态调试法</strong><br><strong>Hook方法:</strong>hook dvmDexfileOpenPratial(加载函数)<br><strong>定制系统:</strong>修改安卓源码并刷机</p>
-<blockquote>
-<p>以上是几种简单的脱壳法，具体其他的还没有研究。可参考<a href="http://www.mottoin.com/89035.html" target="_blank" rel="noopener">http://www.mottoin.com/89035.html</a></p>
-</blockquote>
-<h2 id="Apk脱壳简单示例-脚本"><a href="#Apk脱壳简单示例-脚本" class="headerlink" title="Apk脱壳简单示例(脚本)"></a>Apk脱壳简单示例(脚本)</h2><blockquote>
-<p>下面我们使用DrizzleDump脚本对360加壳的一个apk做演示。<br>工具：已root手机一部，apk为i春秋。</p>
-</blockquote>
-<h3 id="反编译app"><a href="#反编译app" class="headerlink" title="反编译app"></a>反编译app</h3><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p4.png" alt=""></p>
-<blockquote>
-<p>可以看到方法都被改为jni方法了，多亏了那两个特征so文件。</p>
-</blockquote>
-<h3 id="查壳"><a href="#查壳" class="headerlink" title="查壳"></a>查壳</h3><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p5.png" alt=""></p>
-<blockquote>
-<p>将后缀改为zip解压，在assets目录下可以看到libjiagu.so特征库。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p6.png" alt=""></p>
-<h3 id="拷贝drizzledump"><a href="#拷贝drizzledump" class="headerlink" title="拷贝drizzledump"></a>拷贝drizzledump</h3><blockquote>
-<p>将drizzledumper通过adb上传到/data/local/tmp目录</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p7.png" alt=""></p>
-<blockquote>
-<p>可以看到脚本已经上传到相应目录下了。但还没有执行权限。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">chmod 777 drizzledumper</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>然后将i春秋app运行起来，这样内存中才会有有数据。然后执行drizzleDump。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p8.png" alt=""></p>
-<blockquote>
-<p>但是没有什么效果，提示参数不够。应该加上包名，等待扫描的时间。这个扫描时间是因为多次扫描。</p>
-</blockquote>
-<h3 id="运行脚本"><a href="#运行脚本" class="headerlink" title="运行脚本"></a>运行脚本</h3><p>这次加上参数运行。</p>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p9.png" alt=""></p>
-<blockquote>
-<p>可以看到dex文件已经被dump出来了。将dex文件下载到电脑上。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p10.png" alt=""></p>
-<blockquote>
-<p>使用jdx直接反编译dex，可以看到已经有了原始g的java代码。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p11.png" alt=""></p>
-<blockquote>
-<p>关于脚本drizzleDumper工作的原理是root环境下，通过ptrace附加需要脱壳的apk进程，然后在脱壳的apk进程的内存中进行dex文件的特征搜索，当搜索到dex文件时，进行dex文件的内存dump。</p>
-</blockquote>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>最近在网上看了很多资料，很多都是参考大佬们所写博客。加壳和脱壳还有很多东西要学。还有java的反射技术在加壳中的应用，脱壳的技术还有很多种，后续还会对相应的脱壳做总结。学无止境！</p>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="http://blog.csdn.net/jiazhijun/article/details/8678399" target="_blank" rel="noopener">http://blog.csdn.net/jiazhijun/article/details/8678399</a><br><a href="https://blog.csdn.net/jiangwei0910410003/article/details/48415225" target="_blank" rel="noopener">https://blog.csdn.net/jiangwei0910410003/article/details/48415225</a><br><a href="http://www.mottoin.com/89035.html" target="_blank" rel="noopener">http://www.mottoin.com/89035.html</a><br><a href="https://blog.csdn.net/qq1084283172/article/details/53561622" target="_blank" rel="noopener">https://blog.csdn.net/qq1084283172/article/details/53561622</a></p>
-<p>个人拙见，错误之处请大佬指正，欢迎留言交流。</p>
-]]></content>
-      <categories>
-        <category>理论学习</category>
-      </categories>
-      <tags>
-        <tag>APK脱壳</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Xposed框架使用初探(一)</title>
-    <url>/2018/03/15/Xposed%E6%A1%86%E6%9E%B6%E4%BD%BF%E7%94%A8%E5%88%9D%E6%8E%A2(%E4%B8%80)/</url>
-    <content><![CDATA[<h2 id="Hook简介"><a href="#Hook简介" class="headerlink" title="Hook简介"></a>Hook简介</h2><blockquote>
-<p>Hook英文翻译即为钩子。windows下的Hook是一种消息处理机制。每当特定的消息发出，在没有到达目的窗口前，钩子程序就先捕获该消息，即钩子函数先得到控制权，这时钩子函数就可以对消息进行加工处理。它其实是一个处理消息的程序段。当然在安卓系统中也有Hook技术，和windows下的Hook类似，也是在事件传送到终点前截获并监控事件的传输，并对所钩上的事件作出相应的处理。</p>
-</blockquote>
 <a id="more"></a>
-<h2 id="xposed框架"><a href="#xposed框架" class="headerlink" title="xposed框架"></a>xposed框架</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><blockquote>
-<p>Xposed框架是一款对安卓平台的HOOK框架，可以在不修改APK的情况下修改程序的框架服务。通过替换/system/bin/app_process程序控制Zygote进程，从而使app_process在启动过程中加载XposedBridge.jar这个jar包。Zygote进程在启动过程中，会创建一个Dalvik虚拟机实例，还会把java运行时库加载到进程中来，以及注册一些Android核心类的JNI方法来前面创建的Dalvik虚拟机实例中去，应用程序进程会与Zygote一起共享Java运行时库。这就是XposedBridge.jar包可以加载的原因。</p>
-</blockquote>
-<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><blockquote>
-<p>Xposed框架本质只是一个apk应用，可安装到手机。相应模块(Hook代码)就需要我们去编写，模块也是apk文件。</p>
-</blockquote>
-<ol>
-<li><p>手机必须是具有Root权限的。Root是有一定风险的。所以这里使用的是模拟器。</p>
-</li>
-<li><p>实验设备：夜神模拟器+Android4.4.2+XposedInstall.apk(v2.7)+XposedBridge.jar-54。</p>
-</li>
-<li><p>Xposed框架安装效果如下：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p1.png" alt="效果图-1"></p>
-<h2 id="Xposed使用示例"><a href="#Xposed使用示例" class="headerlink" title="Xposed使用示例"></a>Xposed使用示例</h2><h3 id="需要被Hook的程序"><a href="#需要被Hook的程序" class="headerlink" title="需要被Hook的程序"></a>需要被Hook的程序</h3><blockquote>
-<p>程序界面如下</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p2.png" alt="界面-2"></p>
-<blockquote>
-<p>源代码如下:</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p3.jpg" alt="源代码-3"></p>
-<blockquote>
-<p>源代码逻辑很简单，输入一段字符串，然后在compare函数中比较。根据返回值判断输入是否正确。因为这只是做一个示例，compare函数中直接用了equals函数来比较。在代码编程中这是很愚蠢的做法，强烈不建议这种写法。<br>如果想让程序返回正确的值，只要将compare的返回值为true即可。我们这里Hook的就是compare函数，不管输入任意字符，都会显示返回成功。</p>
-</blockquote>
-<h3 id="Hook关键函数介绍"><a href="#Hook关键函数介绍" class="headerlink" title="Hook关键函数介绍"></a>Hook关键函数介绍</h3><blockquote>
-<p>IXposedHookLoadPackage类：加载回调接口，在Xposed入口类继承，实现handleLoadPackage方法。<br>handleLoadPackage：这个方法用于在加载应用程序的包的时候执行用户的操作。<br>findAndHookMethod(String className, ClassLoader classLoader, String methodName, Object… parameterTypesAndCallback) hook一个类中的方法<br>参数:<br>className: 要hook的方法的所在类<br>classloader: 要hook的包的classLoader，一般都写loadPackageParam.classLoader<br>methodName: 要hook的方法<br>parameterTypesAndCallback: 方法的参数和监听器。</p>
-</blockquote>
-<h3 id="导入lib文件"><a href="#导入lib文件" class="headerlink" title="导入lib文件"></a>导入lib文件</h3><blockquote>
-<p>新建安卓项目，这个应该很简单。需要导入jar文件-XposedBridgeApi-54.jar。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p4.png" alt="结构图-4"></p>
-</li>
+
+<h2 id="2-准备"><a href="#2-准备" class="headerlink" title="2 准备"></a>2 准备</h2><p>Android studio（简称AS）<br>smalidea-0.05.zip(插件)<br>android killer(修改smali文件)<br>夜神模拟器<br>实验程序 crakme02.apk</p>
+<h3 id="2-1-修改AndroidManifest-xml"><a href="#2-1-修改AndroidManifest-xml" class="headerlink" title="2.1 修改AndroidManifest.xml"></a>2.1 修改AndroidManifest.xml</h3><p>使用apktool.jar反编译apk。命令：java -jar apktool.jar d -f xxx.apk<br>会生成xxx文件夹。动态调试需要在AndroidManifest.xml添加可调试属性android:debuggable=”true”<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p1.jpg" alt="xml表"><br>修改后同样使用apktool.jar进行回编译。命令：java -jar apktool.jar b -f xxx.apk（未签名）<br>打包后的apk并没有签名。可以使用jdk自带的keytool生成keystore,然后使用jarsigner进行签名。<br>以上过程可以使用一些工具来进行修改。反编译后的xxx文件夹是加载到android studio中的源代码。回编译的apk是安装在夜神模拟器中的。</p>
+<h3 id="2-2-AS安装smalidea插件"><a href="#2-2-AS安装smalidea插件" class="headerlink" title="2.2 AS安装smalidea插件"></a>2.2 AS安装smalidea插件</h3><p>这里的smalidea-0.05.zip插件是下载好的。<br>依次点击File–&gt;setting–&gt;Plugins点击<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p2.jpg" alt="安装选取"><br>从磁盘安装后点击apply–&gt;ok–&gt;重启即可</p>
+<h3 id="2-3-夜神模拟器连接DDMS"><a href="#2-3-夜神模拟器连接DDMS" class="headerlink" title="2.3 夜神模拟器连接DDMS"></a>2.3 夜神模拟器连接DDMS</h3><ol>
+<li>启动模拟器</li>
+<li>cd进入到夜神安装bin目录下，执行命令nox_adb.exe connect 127.0.0.1:62001</li>
+<li>如果命令执行错误。可能是nox_adb.exe版本不对，下载相应版本的替换即可。<br>我这里是配合了环境变量，并将nox_adb.exe connect 127.0.0.1:62001命令做成一个bat。直接运行图方便。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p4.jpg" alt="启动模拟器"><br><strong>模拟器启动后安装回编译并签名的apk</strong><h2 id="3-调试"><a href="#3-调试" class="headerlink" title="3 调试"></a>3 调试</h2><h3 id="3-1-导入源码"><a href="#3-1-导入源码" class="headerlink" title="3.1 导入源码"></a>3.1 导入源码</h3>将反编译的xxx文件夹加载到AS，类似加载一个安卓工程（导入….）界面如下:<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p5.jpg" alt="源码导入"><h3 id="3-2-设置远程调试"><a href="#3-2-设置远程调试" class="headerlink" title="3.2 设置远程调试"></a>3.2 设置远程调试</h3>打开AS，依次点击Run–&gt;edit configurations如图示：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p6.jpg" alt="配置远程调试"><br>点击+号，添加remote配置。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p7.jpg" alt="添加远程"><br>项目名字随便填，其余地方已用箭头标记<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p8.jpg" alt="配置端口"><h3 id="3-3-打开-Android-device-Monitor"><a href="#3-3-打开-Android-device-Monitor" class="headerlink" title="3.3 打开 Android device Monitor"></a>3.3 打开 Android device Monitor</h3><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p9.jpg" alt="打开ddms"><br>因为模拟器上没有运行什么应用，所以列表中并没有什么应用显示<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p10.jpg" alt="程序列表显示"><h3 id="3-4-下断点并开启调试"><a href="#3-4-下断点并开启调试" class="headerlink" title="3.4 下断点并开启调试"></a>3.4 下断点并开启调试</h3>这是一个检测输入是否正确的apk，所以断点就下到checkSN函数处，在代码最左边单击即可。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p11.jpg" alt="下调试断点"><br>打开cmd  输入 <code>adb shell am start -D -n com.droider.crackme0201/.MainActivity（包名/启动主activity）</code><br>然后模拟器会显示等待调试的弹出框<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p12.jpg" alt="启动调试"><br>接下来就是在AS中启动程序了Run—&gt;debug<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p13.jpg" alt="运行程序"><br>DDMS中也会显示调试程序包名<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p14.jpg" alt="ddms显示"><br>可以看到模拟器已经在程序中启动，而且ddms中红色的甲壳虫也变绿。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p15.png" alt="模拟器显示"><br>接下来我们随意输入，将程序停在所下断点处。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p16.png" alt="断点处"><br>可以看到断点已经停下。后续单步调试，查看变量等操作在这里就不介绍。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p17.png" alt="变量显示"><br>个人总结过程，仅供参考。</li>
 </ol>
-<blockquote>
-<p>新建文件夹，命名为lib,然后将XposedBridgeApi-54.jar复制过来。右键Add as library。这样就能看到里面的类了。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p5.png" alt="结构图-5"></p>
-<blockquote>
-<p>然后修改build.gradle文件，将compile改为provided。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p6.jpg" alt="结构图-6"></p>
-<h3 id="AndroidManifest-xml文件修改"><a href="#AndroidManifest-xml文件修改" class="headerlink" title="AndroidManifest.xml文件修改"></a>AndroidManifest.xml文件修改</h3><p>需要在配置文件中添加一些属性。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;application&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedmodule&quot; android:value&#x3D;&quot;true&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposeddescription&quot; android:value&#x3D;&quot;模块第一次测试&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedminversion&quot; android:value&#x3D;&quot;54&quot;&#x2F;&gt;</span><br><span class="line">&lt;&#x2F;application&gt;</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>xposedmodule:判断是否是xposed模块，xposed根据这个来判断是否是模块。<br>xposeddescription：模块描述，会显示在xposed框架模块列表中。<br>xposedminversion：最低xposed版本号，lib文件名可知。</p>
-</blockquote>
-<h3 id="入口类编写"><a href="#入口类编写" class="headerlink" title="入口类编写"></a>入口类编写</h3><blockquote>
-<p>创建一个类，实现IXposedHookLoadPackage借口，重写handLoadPackage方法，这里创建了一个xposedmain类。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class xposedmain implements IXposedHookLoadPackage &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam Param) throws Throwable &#123;</span><br><span class="line">        if(Param.packageName.equals(&quot;com.example.zzwbi.check&quot;))&#x2F;&#x2F;匹配包名</span><br><span class="line">        &#123;</span><br><span class="line">            XposedBridge.log(&quot;Loaded APP:&quot;+Param.packageName);&#x2F;&#x2F;XposedBridge.log相当于日志输出。</span><br><span class="line">            try &#123;</span><br><span class="line">                findAndHookMethod(&quot;com.example.zzwbi.check.MainActivity&quot;, Param.classLoader, &quot;compare&quot;, String.class, new get_True());</span><br><span class="line">                                  &#x2F;&#x2F;类名，一般都写Param.classLoader,方法名，参数...,hook的方法</span><br><span class="line">            &#125; catch (Exception e) &#123;</span><br><span class="line">                XposedBridge.log(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">class get_True extends XC_MethodHook &#123;</span><br><span class="line">    protected void beforeHookedMethod(XC_MethodHook.MethodHookParam param) throws Throwable &#123;</span><br><span class="line">        XposedBridge.log(&quot;beforeHookedMethod userName:&quot; + param.args[0]);</span><br><span class="line">        &#x2F;&#x2F;hook前的一些操作</span><br><span class="line">    &#125;</span><br><span class="line">    protected void afterHookedMethod(XC_MethodHook.MethodHookParam args) throws Throwable &#123;</span><br><span class="line">        &#x2F;&#x2F;hook后的一些操作</span><br><span class="line">        args.setResult(true);</span><br><span class="line">        XposedBridge.log(&quot;使返回值为true&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="设置启动入口"><a href="#设置启动入口" class="headerlink" title="设置启动入口"></a>设置启动入口</h3><blockquote>
-<p>新建assets文件夹,在里面新建文件名为xposed_init,写入你自己创建的xposedmain类包名。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p7.png" alt="启动入口-7"></p>
-<blockquote>
-<p>包名+类名</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p8.png" alt="示意图-8"></p>
-<h3 id="安装激活插件"><a href="#安装激活插件" class="headerlink" title="安装激活插件"></a>安装激活插件</h3><blockquote>
-<p>将apk安装到模拟器上，重启后即可看到插件效果。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p9.png" alt="启用插件-9"></p>
-<blockquote>
-<p>下面看下hook效果</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p10.png" alt="Hook成功-10"></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
-<p>这只是对于Xposed学习的一次小尝试。对于其Hook还有很多地方要学习。例如静态field变量,隐藏函数，内部类，匿名内部类，构造函数的Hook都要继续研究。</p>
-</blockquote>
-<p>####参考链接:<br><a href="http://blog.csdn.net/jiabailong/article/details/52368002" target="_blank" rel="noopener">http://blog.csdn.net/jiabailong/article/details/52368002</a><br> <a href="http://blog.csdn.net/wxyyxc1992/article/details/17320911" target="_blank" rel="noopener">http://blog.csdn.net/wxyyxc1992/article/details/17320911</a><br><a href="http://www.freebuf.com/articles/terminal/114910.html" target="_blank" rel="noopener">http://www.freebuf.com/articles/terminal/114910.html</a></p>
 ]]></content>
       <categories>
         <category>逆向技术学习</category>
       </categories>
       <tags>
         <tag>Android</tag>
-        <tag>Xposed</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>CVE-2011-0104漏洞分析</title>
-    <url>/2018/07/25/CVE-2011-0104%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/</url>
-    <content><![CDATA[<h2 id="漏洞描述"><a href="#漏洞描述" class="headerlink" title="漏洞描述"></a>漏洞描述</h2><blockquote>
-<p>CVE-2011-0104是microsoft excel在解析XLB文件时导致的一个溢出。xlb文件是Excel表格里面的一个设置文件，通常记录用户的操作，并非恶意文件。溢出可导致执行任意代码。本文在分析漏洞的基础上，简单利用漏洞弹出计算器。</p>
-</blockquote>
-<a id="more"></a>
-<h2 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h2><blockquote>
-<p>系统：Windows xp pro sp2<br>软件：windows office 2003<br>调试器：immunity Debugger<br>Poc生成：漏洞战争配套资料</p>
-</blockquote>
-<h2 id="调试分析"><a href="#调试分析" class="headerlink" title="调试分析"></a>调试分析</h2><ul>
-<li>打开一个空白的excel程序</li>
-<li>打开immunity Debugger,附加excel进程</li>
-<li>按下F9将程序运行起来。</li>
-<li>在打开的excel中使用file–&gt;open打开配套资料中的exploit.xlb文件。</li>
-</ul>
-<blockquote>
-<p>异常触发：</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/1.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>可以看到异常是一个访问异常。这时要查找异常产生的源头。向上查看代码，重点关注</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">push ebp</span><br><span class="line">mov ebp,esp</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>以上两个代码是函数开始处的常规操作，向上找可以发现0x300ce252地址处为函数开始。这个就是出错函数的起始位置 </p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/2.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>再次重新加载程序，在0x300ce252地址处下断点，并对esp栈顶内存下写入断点。这里对此做一个解释，为什么下这个断点呢。因为漏洞在复制数据时会覆盖此地址，此地址是调用0x300ce252函数的返回地址。一旦数据覆盖进行写入操作，就会触发断点，这就定位到了异常出错位置。</p>
-</blockquote>
-<ul>
-<li>打开一个空白的excel程序</li>
-<li>打开immunity Debugger,附加excel进程</li>
-<li>使用bp 300ce252命令下断点。</li>
-<li>按下F9将程序运行起来。</li>
-<li>在打开的excel中使用file–&gt;open打开配套资料中的exploit.xlb文件。</li>
-<li>程序断下</li>
-</ul>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/3.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>内存断点下好后，F9运行，可以看到程序停在了0x300ce3c8地址处，又是一个复制数据出错。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/4.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>观察寄存器ebp和edi,之间的大小就是允许复制的数据。计算可得为0x60字节大小。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/5.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>分析可知复制了96个字节，edi的值递增覆盖到栈顶0x13aa90,后面利用的跳板地址。单步运行到程序末尾处，返回可以发现是出错复制代码位于call 0x300ce380中。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/6.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>为了后面更好的搞清楚栈的覆盖和漏洞利用，有必要梳理下函数调用关系。<br><strong>1.</strong>首先定位在0x300ce252,单步运行程序，一步步通过观察堆栈内容是否覆盖来判断程序调用流程。再次重新加载程序。加载过程同上。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/7.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>经过0x302188d8地址处的call excel.306deefe后，栈区被一些乱七八糟的数据填充。可以判断，异常位于这个call中。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/8.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p><strong>2.</strong>下面要做的就是重新加载程序，在0x302188d8地址处下断点，然后进入call深入分析。<br>进入函数中可以看到。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/9.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>梳理总结下流程。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/10.png" alt="cve-2011-0104"></p>
-<h2 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h2><blockquote>
-<p>调试分析可以总结得到，数据覆盖的是sub_300ce252函数的返回地址。也就是栈地址0x13aa90。有了返回地址，还要注意到返回时的ret 2c指令，收回了44个空间大小的数据。这样基本就可以完成漏洞利用了。但当程序运行到0x300CE361处的MOV DWORD PTR DS:[EAX],ECX时出现访问违例：访问到一个不可写的地址0x51453844，此时EAX=0x51453844，向上回溯程序，找出EAX的赋值处，发现在0x300CE354处出现给EAX赋值的操作: MOV EAX, DWORD PTR SS:[EBP+2C]，此时EBP=0x0013AA8C,EBP+2C=0x0013AAB8,0x0013AAB8处的值恰好是0x51453844。观察栈中的数据，51453844恰好又是shellcode中的数据。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/11.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>根据栈区和样本数据中对应出现的数据，修改相应数值，并添加shellcode。即可利用。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/12.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>利用效果</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/13.png" alt="cve-2011-0104"></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
-<p>这次由于时间原因，写的比较仓促可能具体细节不怎么具体。后续再补上，欢迎交流指导。</p>
-</blockquote>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2011-0104" target="_blank" rel="noopener">cve-2011-0104</a><br><a href="https://bbs.pediy.com/thread-217940.htm" target="_blank" rel="noopener">看雪的精品文章</a><br><a href="http://www.cnblogs.com/Ox9A82" target="_blank" rel="noopener">Ox9A82</a><br><a href="https://www.securityfocus.com/bid/47245" target="_blank" rel="noopener">安全焦点</a></p>
-]]></content>
-      <categories>
-        <category>漏洞分析</category>
-      </categories>
-      <tags>
-        <tag>CVE</tag>
-        <tag>文档漏洞</tag>
-        <tag>栈溢出</tag>
+        <tag>夜神模拟器</tag>
       </tags>
   </entry>
   <entry>
@@ -1189,91 +1189,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Pwnable.kr题解之col</title>
-    <url>/2018/03/31/Pwnable.kr%E9%A2%98%E8%A7%A3%E4%B9%8Bcol/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
-<p>这是第二道Pwn练习collision。链接pwnable.kr,下面简单讲解下分析过程。</p>
-</blockquote>
-<h2 id="调试分析"><a href="#调试分析" class="headerlink" title="调试分析"></a>调试分析</h2><blockquote>
-<p>前面的一些下载链接操作这里就不介绍了。直接从linux系统开始调试。<br>首先运行下程序，对程序整体有个把握。</p>
-</blockquote>
-<a id="more"></a>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p1.png" alt=""></p>
-<blockquote>
-<p>可以看到程序运行需要一个参数，而且要20个字节</p>
-</blockquote>
-<blockquote>
-<p>再使用命令将程序反编译，查看主要函数与代码。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">objdump -d col</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>观察发现有一个check_password函数，观察貌似是运算相加，然后比较，</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p2.png" alt=""></p>
-<blockquote>
-<p>接下来请出调试神器—GDB，在check_password下断点。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p3.png" alt=""></p>
-<blockquote>
-<p>下完断点，将程序运行起来，输入“1234567890qwertyuiop”,看程序是怎样运算字符。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p4.png" alt=""></p>
-<blockquote>
-<p>过程这里就不详细描述了，可以发现程序将20个字符分成五部分，每部分4个字符，将转换后的数值累加起来，最后等于0x21dd09ec 。这样思路就有了。</p>
-</blockquote>
-<h2 id="解题"><a href="#解题" class="headerlink" title="解题"></a>解题</h2><blockquote>
-<p>既然这样我们可以将0x21dd09ec=568134124(10进制)<br>568134124 % 5=4<br>(568134124-4)/5==113626824<br>这样就得到了前四个数(十进制)<br>最后一个数是113626824+4=113626828<br>转化为十六进制分别是为0x6c5cec8   0x6c5cecc<br>但要注意的是内存中小端存贮，<br>payload=’\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xcc\xce\xc5\x06’<br>可以使用ssh连接，然后使用下面命令：</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">.&#x2F;col &#96;python -c &#39;print &quot;\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xcc\xce\xc5\x06&quot; &#39; &#96;</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>关于数字的组合有很多种，不局限于这一种。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p5.png" alt=""></p>
-<p>个人拙见，如有错请大佬指正！</p>
-]]></content>
-      <categories>
-        <category>其他</category>
-      </categories>
-      <tags>
-        <tag>CTF</tag>
-        <tag>pwn</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>安卓设置按钮监听的四种方式</title>
-    <url>/2018/03/14/%E5%AE%89%E5%8D%93%E8%AE%BE%E7%BD%AE%E6%8C%89%E9%92%AE%E7%9B%91%E5%90%AC%E7%9A%84%E5%9B%9B%E7%A7%8D%E6%96%B9%E5%BC%8F/</url>
-    <content><![CDATA[<p>这里的布局文件就很简单。只是一个简单的按钮。ID为button1。</p>
-<p>第一种：</p>
-<a id="more"></a>
-<p>1.找到按钮的Id.</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">button.setOnClickListener(this);</span><br><span class="line">但this指的是当前的activity,会报错。ALT+enter键实现View.OnClickListener接口。会自动实现click方法。源码如下：</span><br><span class="line">public class MainActivity extends AppCompatActivity implements View.OnClickListener &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(this);</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public void onClick(View v) &#123;</span><br><span class="line">        Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>第二种：</p>
-<blockquote>
-<p>同样需要找到按钮的Id<br>Button button= (Button) findViewById(R.id.button1);<br>利用button设置监听，并实现onclick方法。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(new View.OnClickListener() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void onClick(View v) &#123;</span><br><span class="line">                Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>第三种：</p>
-<blockquote>
-<p>这种方法要通过布局文件来实现。在&lt;Button 内容/&gt;中添加android:onclick=”click123”。click123可任意设定，是要实现的方法名。<br>然后在Mainactivity中实现click123方法。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">    &#125;</span><br><span class="line">    public void click123(View v)&#123;</span><br><span class="line">        Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>第四种：</p>
-<blockquote>
-<p>以内部类的方式来实现。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(new myclick());</span><br><span class="line">    &#125;</span><br><span class="line">    class myclick implements View.OnClickListener&#123;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        public void onClick(View v) &#123;</span><br><span class="line">            Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-]]></content>
-      <categories>
-        <category>其他</category>
-      </categories>
-      <tags>
-        <tag>Android</tag>
-        <tag>按钮监听</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>安卓反调试检测技术</title>
     <url>/2018/05/28/%E5%AE%89%E5%8D%93%E5%8F%8D%E8%B0%83%E8%AF%95%E6%A3%80%E6%B5%8B%E6%8A%80%E6%9C%AF/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
@@ -1439,6 +1354,91 @@
       <tags>
         <tag>Android</tag>
         <tag>反调试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Pwnable.kr题解之col</title>
+    <url>/2018/03/31/Pwnable.kr%E9%A2%98%E8%A7%A3%E4%B9%8Bcol/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
+<p>这是第二道Pwn练习collision。链接pwnable.kr,下面简单讲解下分析过程。</p>
+</blockquote>
+<h2 id="调试分析"><a href="#调试分析" class="headerlink" title="调试分析"></a>调试分析</h2><blockquote>
+<p>前面的一些下载链接操作这里就不介绍了。直接从linux系统开始调试。<br>首先运行下程序，对程序整体有个把握。</p>
+</blockquote>
+<a id="more"></a>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p1.png" alt=""></p>
+<blockquote>
+<p>可以看到程序运行需要一个参数，而且要20个字节</p>
+</blockquote>
+<blockquote>
+<p>再使用命令将程序反编译，查看主要函数与代码。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">objdump -d col</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>观察发现有一个check_password函数，观察貌似是运算相加，然后比较，</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p2.png" alt=""></p>
+<blockquote>
+<p>接下来请出调试神器—GDB，在check_password下断点。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p3.png" alt=""></p>
+<blockquote>
+<p>下完断点，将程序运行起来，输入“1234567890qwertyuiop”,看程序是怎样运算字符。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p4.png" alt=""></p>
+<blockquote>
+<p>过程这里就不详细描述了，可以发现程序将20个字符分成五部分，每部分4个字符，将转换后的数值累加起来，最后等于0x21dd09ec 。这样思路就有了。</p>
+</blockquote>
+<h2 id="解题"><a href="#解题" class="headerlink" title="解题"></a>解题</h2><blockquote>
+<p>既然这样我们可以将0x21dd09ec=568134124(10进制)<br>568134124 % 5=4<br>(568134124-4)/5==113626824<br>这样就得到了前四个数(十进制)<br>最后一个数是113626824+4=113626828<br>转化为十六进制分别是为0x6c5cec8   0x6c5cecc<br>但要注意的是内存中小端存贮，<br>payload=’\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xcc\xce\xc5\x06’<br>可以使用ssh连接，然后使用下面命令：</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">.&#x2F;col &#96;python -c &#39;print &quot;\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xcc\xce\xc5\x06&quot; &#39; &#96;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>关于数字的组合有很多种，不局限于这一种。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p5.png" alt=""></p>
+<p>个人拙见，如有错请大佬指正！</p>
+]]></content>
+      <categories>
+        <category>其他</category>
+      </categories>
+      <tags>
+        <tag>CTF</tag>
+        <tag>pwn</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>安卓设置按钮监听的四种方式</title>
+    <url>/2018/03/14/%E5%AE%89%E5%8D%93%E8%AE%BE%E7%BD%AE%E6%8C%89%E9%92%AE%E7%9B%91%E5%90%AC%E7%9A%84%E5%9B%9B%E7%A7%8D%E6%96%B9%E5%BC%8F/</url>
+    <content><![CDATA[<p>这里的布局文件就很简单。只是一个简单的按钮。ID为button1。</p>
+<p>第一种：</p>
+<a id="more"></a>
+<p>1.找到按钮的Id.</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">button.setOnClickListener(this);</span><br><span class="line">但this指的是当前的activity,会报错。ALT+enter键实现View.OnClickListener接口。会自动实现click方法。源码如下：</span><br><span class="line">public class MainActivity extends AppCompatActivity implements View.OnClickListener &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(this);</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public void onClick(View v) &#123;</span><br><span class="line">        Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第二种：</p>
+<blockquote>
+<p>同样需要找到按钮的Id<br>Button button= (Button) findViewById(R.id.button1);<br>利用button设置监听，并实现onclick方法。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(new View.OnClickListener() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void onClick(View v) &#123;</span><br><span class="line">                Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第三种：</p>
+<blockquote>
+<p>这种方法要通过布局文件来实现。在&lt;Button 内容/&gt;中添加android:onclick=”click123”。click123可任意设定，是要实现的方法名。<br>然后在Mainactivity中实现click123方法。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">    &#125;</span><br><span class="line">    public void click123(View v)&#123;</span><br><span class="line">        Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第四种：</p>
+<blockquote>
+<p>以内部类的方式来实现。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class MainActivity extends AppCompatActivity  &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.clicklayout);</span><br><span class="line">        Button button&#x3D; (Button) findViewById(R.id.button1);</span><br><span class="line">        button.setOnClickListener(new myclick());</span><br><span class="line">    &#125;</span><br><span class="line">    class myclick implements View.OnClickListener&#123;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        public void onClick(View v) &#123;</span><br><span class="line">            Toast.makeText(MainActivity.this,&quot;@@@@@@@@@&quot;,Toast.LENGTH_LONG).show();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+]]></content>
+      <categories>
+        <category>其他</category>
+      </categories>
+      <tags>
+        <tag>Android</tag>
+        <tag>按钮监听</tag>
       </tags>
   </entry>
 </search>
