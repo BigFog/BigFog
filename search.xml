@@ -1,6 +1,336 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>APK脱壳简介</title>
+    <url>/2018/04/15/Apk%E8%84%B1%E5%A3%B3%E7%AE%80%E4%BB%8B/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
+<p>本来题目是要定为App加固与对抗，但这样内容量就很大，而且最近的学习脱壳内容也只是其中的一小部分，所以就简单对脱壳做一些介绍。</p>
+</blockquote>
+<a id="more"></a>
+<h2 id="Apk加壳"><a href="#Apk加壳" class="headerlink" title="Apk加壳"></a>Apk加壳</h2><h3 id="什么是加壳"><a href="#什么是加壳" class="headerlink" title="什么是加壳"></a>什么是加壳</h3><blockquote>
+<p>加壳就是在二进制的程序中植入一段代码，在运行过程中优先取得程序的控制权，做一些额外的工作，多数病毒就是基于此原理：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p1.png" alt=""></p>
+<blockquote>
+<p>所谓Apk加壳，就是给目标Apk加一层保护程序，把重要数据信息隐藏起来。加壳程序可以有效 阻止对程序的反编译和逆向分析。Apk壳本质的功能就是实现类加载器。系统先执行壳代码，然后将加了密的dex进行解密操作，再加载到系统内存中运行。</p>
+</blockquote>
+<h2 id="安卓dex-加壳原理"><a href="#安卓dex-加壳原理" class="headerlink" title="安卓dex 加壳原理"></a>安卓dex 加壳原理</h2><blockquote>
+<p>加壳过程中主要有三个程序：</p>
+</blockquote>
+<ul>
+<li>需要加壳的源Apk1(未加壳的原始应用)</li>
+<li>壳程序APK2(用来解密并运行apk1程序)</li>
+<li>加密工具(将源APK1进行加密，并和壳程序APK2的dex合并成新的dex)</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p2.png" alt=""></p>
+<blockquote>
+<p>加壳示例过程：待脱壳数据位于位于脱壳程序文件尾。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p3.png" alt=""></p>
+<p>加壳过程：</p>
+<blockquote>
+<ul>
+<li>得到需要加密的apk和自己的脱壳程序apk1。</li>
+<li>利用加壳工具对源apk进行加密。把加密后的apk数据写入脱壳程序的Dex末尾，并在文件尾部添加加密数据的大小；修改脱壳程序Dex头中的checksum.signature和file_size头信息；合并得到新的Dex1文件。</li>
+<li>然后将新的Dex1文件替换原脱壳程序apk1中dex文件。生成新的apk，叫做脱壳程序apk。</li>
+</ul>
+</blockquote>
+<p>脱壳过程：</p>
+<blockquote>
+<ul>
+<li>读取Dex文件末尾数据获取待脱壳加密数据长度。</li>
+<li>从Dex文件读取脱壳数据，解密加密数据。以文件形式保存解密的数据到*.apk文件.</li>
+<li>通过DexClassLoader动态加载*.apk。</li>
+</ul>
+</blockquote>
+<h3 id="壳史"><a href="#壳史" class="headerlink" title="壳史"></a>壳史</h3><p>第一代壳：DEX加密(混淆技术)</p>
+<blockquote>
+<ul>
+<li>Dex字符串加密</li>
+<li>资源加密</li>
+<li>对抗反编译</li>
+<li>反调试</li>
+<li>自定义DexClassLoader</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>对于一些字符串加密，资源混淆的实现，不得不提ProGuard。这是一个压缩，优化，和混淆java字节码文件的免费工具。它可以删除无用的类，字段，方法和属性。可以用简短无意义的名称来命名已存在的类，字段，方法等。android studio自带了这个功能。对于反调试就比较多了，例如ptrace自身进程，检查进程运行状态，检查调试器进程，完整性校验，断点检测等，后期会对反调试内容进行深入学习研究</p>
+</blockquote>
+<p>第二代壳：Dex抽取与So加固(加壳技术)</p>
+<blockquote>
+<ul>
+<li>对抗第一代壳常见的脱壳法</li>
+<li>Dex Method代码抽取到外部（通常企业版）</li>
+<li>Dex动态加载</li>
+<li>So加密</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>类抽取常规的有隐藏dex文件和修改dex结构。隐藏dex文件是通过对目标dex文件进行整体加密或压缩方式把整个dex转换为另外一个文件存放在assert文件夹中或者其它地方，然后利用类加载器技术进行内存解密并加载运行。而修改dex结构则是抽取DexCode中的字节码指令后用零去填充，或者修改方法属性等操作，运行时在内存中做修正，修复等处理工作。</p>
+</blockquote>
+<blockquote>
+<p>关于Dex动态加载，就要提到dalvik虚拟机了。它和java虚拟机一样，在运行程序时首先需要将对应的类加载到内存中。在标准虚拟机中，类加载可以从class文件中读取，也可以是其他二进制流，这样就可以在程序运行时手动加载class，从而达到代码动态执行的目的。常用的有两个类：DexClassLoader和PathClassLoader,PathClassLoader是安卓应用中的默认加载器。<br>区别：DexClassLoader可以加载任何路径的dex/dex/jar<br>PathClassLoader只能加载data/app中的apk,也就是已经安装到手机中的apk.这个也是PathClassLoader作为默认的类加载器的原因，因为一般程序都是安装了，再打开，这时PathClassLoader就去加载指定的apk.</p>
+</blockquote>
+<p>第三代壳：Dex动态解密与So混淆(指令抽离)</p>
+<blockquote>
+<ul>
+<li>Dex Method代码动态解密</li>
+<li>So代码膨胀混淆</li>
+<li>对抗之前出现的所有脱壳法</li>
+</ul>
+</blockquote>
+<p>第四代壳：arm vmp(指令转换)</p>
+<blockquote>
+<p>vmp:用vmp加固后的还原过程比较复杂和困难，需要用大量的时间作分析。</p>
+</blockquote>
+<h3 id="壳的识别"><a href="#壳的识别" class="headerlink" title="壳的识别"></a>壳的识别</h3><p>国内提供apk加固的第三方技术公司有：</p>
+<blockquote>
+<p>娜迦  爱加密 梆梆加固 360加固保  百度加固 腾讯加固 等。<br>通过查看资料发现大多数加密后都会生成相应的特征so文件。这样就可以根据so来查壳。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th align="center">特征So文件</th>
+<th align="center">所属加固公司</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">libchaosvmp.so</td>
+<td align="center">娜迦</td>
+</tr>
+<tr>
+<td align="center">libddog.so</td>
+<td align="center">娜迦</td>
+</tr>
+<tr>
+<td align="center">libfdog.so</td>
+<td align="center">娜迦</td>
+</tr>
+<tr>
+<td align="center">libedog.so</td>
+<td align="center">娜迦企业版</td>
+</tr>
+<tr>
+<td align="center">libexec.so</td>
+<td align="center">爱加密</td>
+</tr>
+<tr>
+<td align="center">libexecmain.so</td>
+<td align="center">爱加密</td>
+</tr>
+<tr>
+<td align="center">ijiami.dat</td>
+<td align="center">爱加密</td>
+</tr>
+<tr>
+<td align="center">ijiami.ajm</td>
+<td align="center">爱加密企业版</td>
+</tr>
+<tr>
+<td align="center">libsecexe.so</td>
+<td align="center">梆梆免费版</td>
+</tr>
+<tr>
+<td align="center">libsecmain.so</td>
+<td align="center">梆梆免费版</td>
+</tr>
+<tr>
+<td align="center">libSecShell.so</td>
+<td align="center">梆梆免费版</td>
+</tr>
+<tr>
+<td align="center">libDexHelper.so</td>
+<td align="center">梆梆企业版</td>
+</tr>
+<tr>
+<td align="center">libDexHelper-x86.so</td>
+<td align="center">梆梆企业版</td>
+</tr>
+<tr>
+<td align="center">libprotectClass.so</td>
+<td align="center">360</td>
+</tr>
+<tr>
+<td align="center">libjiagu.so</td>
+<td align="center">360</td>
+</tr>
+<tr>
+<td align="center">libjiagu_art.so</td>
+<td align="center">360</td>
+</tr>
+<tr>
+<td align="center">libjiagu_x86.so</td>
+<td align="center">360</td>
+</tr>
+<tr>
+<td align="center">libegis.so</td>
+<td align="center">通付盾</td>
+</tr>
+<tr>
+<td align="center">libNSaferOnly.so</td>
+<td align="center">通付盾</td>
+</tr>
+<tr>
+<td align="center">libnqshield.so</td>
+<td align="center">网秦</td>
+</tr>
+<tr>
+<td align="center">libbaiduprotect.so</td>
+<td align="center">百度</td>
+</tr>
+<tr>
+<td align="center">aliprotect.dat</td>
+<td align="center">阿里聚安全</td>
+</tr>
+<tr>
+<td align="center">libsgmain.so</td>
+<td align="center">阿里聚安全</td>
+</tr>
+<tr>
+<td align="center">libsgsecuritybody.so</td>
+<td align="center">阿里聚安全</td>
+</tr>
+<tr>
+<td align="center">libmobisec.so</td>
+<td align="center">阿里聚安全</td>
+</tr>
+<tr>
+<td align="center">libtup.so</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">libexec.so</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">libshell.so</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">mix.dex</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">lib/armeabi/mix.dex</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">lib/armeabi/mixz.dex</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">libtosprotection.armeabi.so</td>
+<td align="center">腾讯御安全</td>
+</tr>
+<tr>
+<td align="center">libtosprotection.armeabi-v7a.so</td>
+<td align="center">腾讯御安全</td>
+</tr>
+<tr>
+<td align="center">libtosprotection.x86.so</td>
+<td align="center">腾讯御安全</td>
+</tr>
+<tr>
+<td align="center">libnesec.so</td>
+<td align="center">网易易盾</td>
+</tr>
+<tr>
+<td align="center">libAPKProtect.so</td>
+<td align="center">APKProtect</td>
+</tr>
+<tr>
+<td align="center">libkwscmm.so</td>
+<td align="center">几维安全</td>
+</tr>
+<tr>
+<td align="center">libkwscr.so</td>
+<td align="center">几维安全</td>
+</tr>
+<tr>
+<td align="center">libkwslinker.so</td>
+<td align="center">几维安全</td>
+</tr>
+<tr>
+<td align="center">libx3g.so</td>
+<td align="center">顶像科技</td>
+</tr>
+<tr>
+<td align="center">libapssec.so</td>
+<td align="center">盛大</td>
+</tr>
+<tr>
+<td align="center">librsprotect.so</td>
+<td align="center">瑞星</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>这个特点可以作为加壳厂商的特征。这样就可以得到厂商加壳的套路，脱壳也就有了破解之法。<br>这里提一下网上的一款apk查壳工具：ApkScan-PKID.其工作原理就是根据apk加壳后生成的特征文件来匹配加壳厂商的。这里给作者点个赞。</p>
+</blockquote>
+<h3 id="简单的几种脱壳方法"><a href="#简单的几种脱壳方法" class="headerlink" title="简单的几种脱壳方法"></a>简单的几种脱壳方法</h3><p><strong>内存dump法：</strong></p>
+<blockquote>
+<ul>
+<li>在内存中寻找dex 035 或者dex 036</li>
+<li>/proc/xxx/maps中查找后，手动dump<br>脚本：android-UNpacker   drizzleDumper  升级版的android-UNpacker dumpDex<br>IDA Pro+dumpDEX(脱壳代码如下)</li>
+</ul>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">static main(void)&#123;</span><br><span class="line">auto fp,begin,end,dexbyte;</span><br><span class="line">fp&#x3D;fopen(&quot;E:\\dump.dex&quot;,&quot;wb&quot;)</span><br><span class="line">begin&#x3D;0x755A9000; &#x2F;&#x2F;起始地址</span><br><span class="line">end&#x3D;begin+dex文件大小;</span><br><span class="line">for(dexbyte&#x3D;begin;dexbyte&lt;end;dexbyte++)</span><br><span class="line">    fputc(Byte(dexbyte),fp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>动态调试法</strong><br><strong>Hook方法:</strong>hook dvmDexfileOpenPratial(加载函数)<br><strong>定制系统:</strong>修改安卓源码并刷机</p>
+<blockquote>
+<p>以上是几种简单的脱壳法，具体其他的还没有研究。可参考<a href="http://www.mottoin.com/89035.html" target="_blank" rel="noopener">http://www.mottoin.com/89035.html</a></p>
+</blockquote>
+<h2 id="Apk脱壳简单示例-脚本"><a href="#Apk脱壳简单示例-脚本" class="headerlink" title="Apk脱壳简单示例(脚本)"></a>Apk脱壳简单示例(脚本)</h2><blockquote>
+<p>下面我们使用DrizzleDump脚本对360加壳的一个apk做演示。<br>工具：已root手机一部，apk为i春秋。</p>
+</blockquote>
+<h3 id="反编译app"><a href="#反编译app" class="headerlink" title="反编译app"></a>反编译app</h3><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p4.png" alt=""></p>
+<blockquote>
+<p>可以看到方法都被改为jni方法了，多亏了那两个特征so文件。</p>
+</blockquote>
+<h3 id="查壳"><a href="#查壳" class="headerlink" title="查壳"></a>查壳</h3><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p5.png" alt=""></p>
+<blockquote>
+<p>将后缀改为zip解压，在assets目录下可以看到libjiagu.so特征库。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p6.png" alt=""></p>
+<h3 id="拷贝drizzledump"><a href="#拷贝drizzledump" class="headerlink" title="拷贝drizzledump"></a>拷贝drizzledump</h3><blockquote>
+<p>将drizzledumper通过adb上传到/data/local/tmp目录</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p7.png" alt=""></p>
+<blockquote>
+<p>可以看到脚本已经上传到相应目录下了。但还没有执行权限。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">chmod 777 drizzledumper</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>然后将i春秋app运行起来，这样内存中才会有有数据。然后执行drizzleDump。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p8.png" alt=""></p>
+<blockquote>
+<p>但是没有什么效果，提示参数不够。应该加上包名，等待扫描的时间。这个扫描时间是因为多次扫描。</p>
+</blockquote>
+<h3 id="运行脚本"><a href="#运行脚本" class="headerlink" title="运行脚本"></a>运行脚本</h3><p>这次加上参数运行。</p>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p9.png" alt=""></p>
+<blockquote>
+<p>可以看到dex文件已经被dump出来了。将dex文件下载到电脑上。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p10.png" alt=""></p>
+<blockquote>
+<p>使用jdx直接反编译dex，可以看到已经有了原始g的java代码。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p11.png" alt=""></p>
+<blockquote>
+<p>关于脚本drizzleDumper工作的原理是root环境下，通过ptrace附加需要脱壳的apk进程，然后在脱壳的apk进程的内存中进行dex文件的特征搜索，当搜索到dex文件时，进行dex文件的内存dump。</p>
+</blockquote>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>最近在网上看了很多资料，很多都是参考大佬们所写博客。加壳和脱壳还有很多东西要学。还有java的反射技术在加壳中的应用，脱壳的技术还有很多种，后续还会对相应的脱壳做总结。学无止境！</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="http://blog.csdn.net/jiazhijun/article/details/8678399" target="_blank" rel="noopener">http://blog.csdn.net/jiazhijun/article/details/8678399</a><br><a href="https://blog.csdn.net/jiangwei0910410003/article/details/48415225" target="_blank" rel="noopener">https://blog.csdn.net/jiangwei0910410003/article/details/48415225</a><br><a href="http://www.mottoin.com/89035.html" target="_blank" rel="noopener">http://www.mottoin.com/89035.html</a><br><a href="https://blog.csdn.net/qq1084283172/article/details/53561622" target="_blank" rel="noopener">https://blog.csdn.net/qq1084283172/article/details/53561622</a></p>
+<p>个人拙见，错误之处请大佬指正，欢迎留言交流。</p>
+]]></content>
+      <categories>
+        <category>理论学习</category>
+      </categories>
+      <tags>
+        <tag>APK脱壳</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Android Studio+夜神模拟器 动态调试APK</title>
     <url>/2018/03/03/Android%20Studio+%E5%A4%9C%E7%A5%9E%E6%A8%A1%E6%8B%9F%E5%99%A8%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95APK/</url>
     <content><![CDATA[<h2 id="1-smali文件格式"><a href="#1-smali文件格式" class="headerlink" title="1 smali文件格式"></a>1 smali文件格式</h2><table>
@@ -39,7 +369,7 @@
 </ol>
 ]]></content>
       <categories>
-        <category>逆向技术</category>
+        <category>逆向技术学习</category>
       </categories>
       <tags>
         <tag>Android</tag>

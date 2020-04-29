@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"bigfog.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="前言 本来题目是要定为App加固与对抗，但这样内容量就很大，而且最近的学习脱壳内容也只是其中的一小部分，所以就简单对脱壳做一些介绍。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="APK脱壳简介">
+<meta property="og:url" content="http://bigfog.github.io/2018/04/15/Apk%E8%84%B1%E5%A3%B3%E7%AE%80%E4%BB%8B/index.html">
+<meta property="og:site_name" content="百文书屋">
+<meta property="og:description" content="前言 本来题目是要定为App加固与对抗，但这样内容量就很大，而且最近的学习脱壳内容也只是其中的一小部分，所以就简单对脱壳做一些介绍。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p1.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p2.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p3.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p4.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p5.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p6.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p7.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p8.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p9.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p10.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p11.png">
+<meta property="article:published_time" content="2018-04-15T09:26:00.000Z">
+<meta property="article:modified_time" content="2020-04-29T03:24:27.229Z">
+<meta property="article:author" content="BigFog">
+<meta property="article:tag" content="APK脱壳">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p1.png">
+
+<link rel="canonical" href="http://bigfog.github.io/2018/04/15/Apk%E8%84%B1%E5%A3%B3%E7%AE%80%E4%BB%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>APK脱壳简介 | 百文书屋</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">百文书屋</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">脚踏实地 砥砺前行</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://bigfog.github.io/2018/04/15/Apk%E8%84%B1%E5%A3%B3%E7%AE%80%E4%BB%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="BigFog">
+      <meta itemprop="description" content="日常学习记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="百文书屋">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          APK脱壳简介
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-04-15 17:26:00" itemprop="dateCreated datePublished" datetime="2018-04-15T17:26:00+08:00">2018-04-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%90%86%E8%AE%BA%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">理论学习</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.9k</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
+<p>本来题目是要定为App加固与对抗，但这样内容量就很大，而且最近的学习脱壳内容也只是其中的一小部分，所以就简单对脱壳做一些介绍。</p>
+</blockquote>
+<a id="more"></a>
+<h2 id="Apk加壳"><a href="#Apk加壳" class="headerlink" title="Apk加壳"></a>Apk加壳</h2><h3 id="什么是加壳"><a href="#什么是加壳" class="headerlink" title="什么是加壳"></a>什么是加壳</h3><blockquote>
+<p>加壳就是在二进制的程序中植入一段代码，在运行过程中优先取得程序的控制权，做一些额外的工作，多数病毒就是基于此原理：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p1.png" alt=""></p>
+<blockquote>
+<p>所谓Apk加壳，就是给目标Apk加一层保护程序，把重要数据信息隐藏起来。加壳程序可以有效 阻止对程序的反编译和逆向分析。Apk壳本质的功能就是实现类加载器。系统先执行壳代码，然后将加了密的dex进行解密操作，再加载到系统内存中运行。</p>
+</blockquote>
+<h2 id="安卓dex-加壳原理"><a href="#安卓dex-加壳原理" class="headerlink" title="安卓dex 加壳原理"></a>安卓dex 加壳原理</h2><blockquote>
+<p>加壳过程中主要有三个程序：</p>
+</blockquote>
+<ul>
+<li>需要加壳的源Apk1(未加壳的原始应用)</li>
+<li>壳程序APK2(用来解密并运行apk1程序)</li>
+<li>加密工具(将源APK1进行加密，并和壳程序APK2的dex合并成新的dex)</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p2.png" alt=""></p>
+<blockquote>
+<p>加壳示例过程：待脱壳数据位于位于脱壳程序文件尾。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p3.png" alt=""></p>
+<p>加壳过程：</p>
+<blockquote>
+<ul>
+<li>得到需要加密的apk和自己的脱壳程序apk1。</li>
+<li>利用加壳工具对源apk进行加密。把加密后的apk数据写入脱壳程序的Dex末尾，并在文件尾部添加加密数据的大小；修改脱壳程序Dex头中的checksum.signature和file_size头信息；合并得到新的Dex1文件。</li>
+<li>然后将新的Dex1文件替换原脱壳程序apk1中dex文件。生成新的apk，叫做脱壳程序apk。</li>
+</ul>
+</blockquote>
+<p>脱壳过程：</p>
+<blockquote>
+<ul>
+<li>读取Dex文件末尾数据获取待脱壳加密数据长度。</li>
+<li>从Dex文件读取脱壳数据，解密加密数据。以文件形式保存解密的数据到*.apk文件.</li>
+<li>通过DexClassLoader动态加载*.apk。</li>
+</ul>
+</blockquote>
+<h3 id="壳史"><a href="#壳史" class="headerlink" title="壳史"></a>壳史</h3><p>第一代壳：DEX加密(混淆技术)</p>
+<blockquote>
+<ul>
+<li>Dex字符串加密</li>
+<li>资源加密</li>
+<li>对抗反编译</li>
+<li>反调试</li>
+<li>自定义DexClassLoader</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>对于一些字符串加密，资源混淆的实现，不得不提ProGuard。这是一个压缩，优化，和混淆java字节码文件的免费工具。它可以删除无用的类，字段，方法和属性。可以用简短无意义的名称来命名已存在的类，字段，方法等。android studio自带了这个功能。对于反调试就比较多了，例如ptrace自身进程，检查进程运行状态，检查调试器进程，完整性校验，断点检测等，后期会对反调试内容进行深入学习研究</p>
+</blockquote>
+<p>第二代壳：Dex抽取与So加固(加壳技术)</p>
+<blockquote>
+<ul>
+<li>对抗第一代壳常见的脱壳法</li>
+<li>Dex Method代码抽取到外部（通常企业版）</li>
+<li>Dex动态加载</li>
+<li>So加密</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>类抽取常规的有隐藏dex文件和修改dex结构。隐藏dex文件是通过对目标dex文件进行整体加密或压缩方式把整个dex转换为另外一个文件存放在assert文件夹中或者其它地方，然后利用类加载器技术进行内存解密并加载运行。而修改dex结构则是抽取DexCode中的字节码指令后用零去填充，或者修改方法属性等操作，运行时在内存中做修正，修复等处理工作。</p>
+</blockquote>
+<blockquote>
+<p>关于Dex动态加载，就要提到dalvik虚拟机了。它和java虚拟机一样，在运行程序时首先需要将对应的类加载到内存中。在标准虚拟机中，类加载可以从class文件中读取，也可以是其他二进制流，这样就可以在程序运行时手动加载class，从而达到代码动态执行的目的。常用的有两个类：DexClassLoader和PathClassLoader,PathClassLoader是安卓应用中的默认加载器。<br>区别：DexClassLoader可以加载任何路径的dex/dex/jar<br>PathClassLoader只能加载data/app中的apk,也就是已经安装到手机中的apk.这个也是PathClassLoader作为默认的类加载器的原因，因为一般程序都是安装了，再打开，这时PathClassLoader就去加载指定的apk.</p>
+</blockquote>
+<p>第三代壳：Dex动态解密与So混淆(指令抽离)</p>
+<blockquote>
+<ul>
+<li>Dex Method代码动态解密</li>
+<li>So代码膨胀混淆</li>
+<li>对抗之前出现的所有脱壳法</li>
+</ul>
+</blockquote>
+<p>第四代壳：arm vmp(指令转换)</p>
+<blockquote>
+<p>vmp:用vmp加固后的还原过程比较复杂和困难，需要用大量的时间作分析。</p>
+</blockquote>
+<h3 id="壳的识别"><a href="#壳的识别" class="headerlink" title="壳的识别"></a>壳的识别</h3><p>国内提供apk加固的第三方技术公司有：</p>
+<blockquote>
+<p>娜迦  爱加密 梆梆加固 360加固保  百度加固 腾讯加固 等。<br>通过查看资料发现大多数加密后都会生成相应的特征so文件。这样就可以根据so来查壳。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th align="center">特征So文件</th>
+<th align="center">所属加固公司</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">libchaosvmp.so</td>
+<td align="center">娜迦</td>
+</tr>
+<tr>
+<td align="center">libddog.so</td>
+<td align="center">娜迦</td>
+</tr>
+<tr>
+<td align="center">libfdog.so</td>
+<td align="center">娜迦</td>
+</tr>
+<tr>
+<td align="center">libedog.so</td>
+<td align="center">娜迦企业版</td>
+</tr>
+<tr>
+<td align="center">libexec.so</td>
+<td align="center">爱加密</td>
+</tr>
+<tr>
+<td align="center">libexecmain.so</td>
+<td align="center">爱加密</td>
+</tr>
+<tr>
+<td align="center">ijiami.dat</td>
+<td align="center">爱加密</td>
+</tr>
+<tr>
+<td align="center">ijiami.ajm</td>
+<td align="center">爱加密企业版</td>
+</tr>
+<tr>
+<td align="center">libsecexe.so</td>
+<td align="center">梆梆免费版</td>
+</tr>
+<tr>
+<td align="center">libsecmain.so</td>
+<td align="center">梆梆免费版</td>
+</tr>
+<tr>
+<td align="center">libSecShell.so</td>
+<td align="center">梆梆免费版</td>
+</tr>
+<tr>
+<td align="center">libDexHelper.so</td>
+<td align="center">梆梆企业版</td>
+</tr>
+<tr>
+<td align="center">libDexHelper-x86.so</td>
+<td align="center">梆梆企业版</td>
+</tr>
+<tr>
+<td align="center">libprotectClass.so</td>
+<td align="center">360</td>
+</tr>
+<tr>
+<td align="center">libjiagu.so</td>
+<td align="center">360</td>
+</tr>
+<tr>
+<td align="center">libjiagu_art.so</td>
+<td align="center">360</td>
+</tr>
+<tr>
+<td align="center">libjiagu_x86.so</td>
+<td align="center">360</td>
+</tr>
+<tr>
+<td align="center">libegis.so</td>
+<td align="center">通付盾</td>
+</tr>
+<tr>
+<td align="center">libNSaferOnly.so</td>
+<td align="center">通付盾</td>
+</tr>
+<tr>
+<td align="center">libnqshield.so</td>
+<td align="center">网秦</td>
+</tr>
+<tr>
+<td align="center">libbaiduprotect.so</td>
+<td align="center">百度</td>
+</tr>
+<tr>
+<td align="center">aliprotect.dat</td>
+<td align="center">阿里聚安全</td>
+</tr>
+<tr>
+<td align="center">libsgmain.so</td>
+<td align="center">阿里聚安全</td>
+</tr>
+<tr>
+<td align="center">libsgsecuritybody.so</td>
+<td align="center">阿里聚安全</td>
+</tr>
+<tr>
+<td align="center">libmobisec.so</td>
+<td align="center">阿里聚安全</td>
+</tr>
+<tr>
+<td align="center">libtup.so</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">libexec.so</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">libshell.so</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">mix.dex</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">lib/armeabi/mix.dex</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">lib/armeabi/mixz.dex</td>
+<td align="center">腾讯</td>
+</tr>
+<tr>
+<td align="center">libtosprotection.armeabi.so</td>
+<td align="center">腾讯御安全</td>
+</tr>
+<tr>
+<td align="center">libtosprotection.armeabi-v7a.so</td>
+<td align="center">腾讯御安全</td>
+</tr>
+<tr>
+<td align="center">libtosprotection.x86.so</td>
+<td align="center">腾讯御安全</td>
+</tr>
+<tr>
+<td align="center">libnesec.so</td>
+<td align="center">网易易盾</td>
+</tr>
+<tr>
+<td align="center">libAPKProtect.so</td>
+<td align="center">APKProtect</td>
+</tr>
+<tr>
+<td align="center">libkwscmm.so</td>
+<td align="center">几维安全</td>
+</tr>
+<tr>
+<td align="center">libkwscr.so</td>
+<td align="center">几维安全</td>
+</tr>
+<tr>
+<td align="center">libkwslinker.so</td>
+<td align="center">几维安全</td>
+</tr>
+<tr>
+<td align="center">libx3g.so</td>
+<td align="center">顶像科技</td>
+</tr>
+<tr>
+<td align="center">libapssec.so</td>
+<td align="center">盛大</td>
+</tr>
+<tr>
+<td align="center">librsprotect.so</td>
+<td align="center">瑞星</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>这个特点可以作为加壳厂商的特征。这样就可以得到厂商加壳的套路，脱壳也就有了破解之法。<br>这里提一下网上的一款apk查壳工具：ApkScan-PKID.其工作原理就是根据apk加壳后生成的特征文件来匹配加壳厂商的。这里给作者点个赞。</p>
+</blockquote>
+<h3 id="简单的几种脱壳方法"><a href="#简单的几种脱壳方法" class="headerlink" title="简单的几种脱壳方法"></a>简单的几种脱壳方法</h3><p><strong>内存dump法：</strong></p>
+<blockquote>
+<ul>
+<li>在内存中寻找dex 035 或者dex 036</li>
+<li>/proc/xxx/maps中查找后，手动dump<br>脚本：android-UNpacker   drizzleDumper  升级版的android-UNpacker dumpDex<br>IDA Pro+dumpDEX(脱壳代码如下)</li>
+</ul>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">static main(void)&#123;</span><br><span class="line">auto fp,begin,end,dexbyte;</span><br><span class="line">fp&#x3D;fopen(&quot;E:\\dump.dex&quot;,&quot;wb&quot;)</span><br><span class="line">begin&#x3D;0x755A9000; &#x2F;&#x2F;起始地址</span><br><span class="line">end&#x3D;begin+dex文件大小;</span><br><span class="line">for(dexbyte&#x3D;begin;dexbyte&lt;end;dexbyte++)</span><br><span class="line">    fputc(Byte(dexbyte),fp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>动态调试法</strong><br><strong>Hook方法:</strong>hook dvmDexfileOpenPratial(加载函数)<br><strong>定制系统:</strong>修改安卓源码并刷机</p>
+<blockquote>
+<p>以上是几种简单的脱壳法，具体其他的还没有研究。可参考<a href="http://www.mottoin.com/89035.html" target="_blank" rel="noopener">http://www.mottoin.com/89035.html</a></p>
+</blockquote>
+<h2 id="Apk脱壳简单示例-脚本"><a href="#Apk脱壳简单示例-脚本" class="headerlink" title="Apk脱壳简单示例(脚本)"></a>Apk脱壳简单示例(脚本)</h2><blockquote>
+<p>下面我们使用DrizzleDump脚本对360加壳的一个apk做演示。<br>工具：已root手机一部，apk为i春秋。</p>
+</blockquote>
+<h3 id="反编译app"><a href="#反编译app" class="headerlink" title="反编译app"></a>反编译app</h3><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p4.png" alt=""></p>
+<blockquote>
+<p>可以看到方法都被改为jni方法了，多亏了那两个特征so文件。</p>
+</blockquote>
+<h3 id="查壳"><a href="#查壳" class="headerlink" title="查壳"></a>查壳</h3><p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p5.png" alt=""></p>
+<blockquote>
+<p>将后缀改为zip解压，在assets目录下可以看到libjiagu.so特征库。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p6.png" alt=""></p>
+<h3 id="拷贝drizzledump"><a href="#拷贝drizzledump" class="headerlink" title="拷贝drizzledump"></a>拷贝drizzledump</h3><blockquote>
+<p>将drizzledumper通过adb上传到/data/local/tmp目录</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p7.png" alt=""></p>
+<blockquote>
+<p>可以看到脚本已经上传到相应目录下了。但还没有执行权限。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod 777 drizzledumper</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>然后将i春秋app运行起来，这样内存中才会有有数据。然后执行drizzleDump。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p8.png" alt=""></p>
+<blockquote>
+<p>但是没有什么效果，提示参数不够。应该加上包名，等待扫描的时间。这个扫描时间是因为多次扫描。</p>
+</blockquote>
+<h3 id="运行脚本"><a href="#运行脚本" class="headerlink" title="运行脚本"></a>运行脚本</h3><p>这次加上参数运行。</p>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p9.png" alt=""></p>
+<blockquote>
+<p>可以看到dex文件已经被dump出来了。将dex文件下载到电脑上。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p10.png" alt=""></p>
+<blockquote>
+<p>使用jdx直接反编译dex，可以看到已经有了原始g的java代码。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180415/p11.png" alt=""></p>
+<blockquote>
+<p>关于脚本drizzleDumper工作的原理是root环境下，通过ptrace附加需要脱壳的apk进程，然后在脱壳的apk进程的内存中进行dex文件的特征搜索，当搜索到dex文件时，进行dex文件的内存dump。</p>
+</blockquote>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>最近在网上看了很多资料，很多都是参考大佬们所写博客。加壳和脱壳还有很多东西要学。还有java的反射技术在加壳中的应用，脱壳的技术还有很多种，后续还会对相应的脱壳做总结。学无止境！</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="http://blog.csdn.net/jiazhijun/article/details/8678399" target="_blank" rel="noopener">http://blog.csdn.net/jiazhijun/article/details/8678399</a><br><a href="https://blog.csdn.net/jiangwei0910410003/article/details/48415225" target="_blank" rel="noopener">https://blog.csdn.net/jiangwei0910410003/article/details/48415225</a><br><a href="http://www.mottoin.com/89035.html" target="_blank" rel="noopener">http://www.mottoin.com/89035.html</a><br><a href="https://blog.csdn.net/qq1084283172/article/details/53561622" target="_blank" rel="noopener">https://blog.csdn.net/qq1084283172/article/details/53561622</a></p>
+<p>个人拙见，错误之处请大佬指正，欢迎留言交流。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/APK%E8%84%B1%E5%A3%B3/" rel="tag"># APK脱壳</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/03/03/Android%20Studio+%E5%A4%9C%E7%A5%9E%E6%A8%A1%E6%8B%9F%E5%99%A8%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95APK/" rel="prev" title="Android Studio+夜神模拟器 动态调试APK">
+      <i class="fa fa-chevron-left"></i> Android Studio+夜神模拟器 动态调试APK
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/07/25/CVE-2011-0104%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" rel="next" title="CVE-2011-0104漏洞分析">
+      CVE-2011-0104漏洞分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zNjc1OC8xMzI5Mw=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Apk加壳"><span class="nav-number">2.</span> <span class="nav-text">Apk加壳</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是加壳"><span class="nav-number">2.1.</span> <span class="nav-text">什么是加壳</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安卓dex-加壳原理"><span class="nav-number">3.</span> <span class="nav-text">安卓dex 加壳原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#壳史"><span class="nav-number">3.1.</span> <span class="nav-text">壳史</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#壳的识别"><span class="nav-number">3.2.</span> <span class="nav-text">壳的识别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#简单的几种脱壳方法"><span class="nav-number">3.3.</span> <span class="nav-text">简单的几种脱壳方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Apk脱壳简单示例-脚本"><span class="nav-number">4.</span> <span class="nav-text">Apk脱壳简单示例(脚本)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#反编译app"><span class="nav-number">4.1.</span> <span class="nav-text">反编译app</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查壳"><span class="nav-number">4.2.</span> <span class="nav-text">查壳</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#拷贝drizzledump"><span class="nav-number">4.3.</span> <span class="nav-text">拷贝drizzledump</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#运行脚本"><span class="nav-number">4.4.</span> <span class="nav-text">运行脚本</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">6.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="BigFog"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">BigFog</p>
+  <div class="site-description" itemprop="description">日常学习记录</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">BigFog</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>
