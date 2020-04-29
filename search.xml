@@ -1,6 +1,147 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Android Studio+夜神模拟器 动态调试APK</title>
+    <url>/2018/03/03/Android%20Studio+%E5%A4%9C%E7%A5%9E%E6%A8%A1%E6%8B%9F%E5%99%A8%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95APK/</url>
+    <content><![CDATA[<h2 id="1-smali文件格式"><a href="#1-smali文件格式" class="headerlink" title="1 smali文件格式"></a>1 smali文件格式</h2><table>
+<thead>
+<tr>
+<th align="left">头部定义</th>
+<th align="center">域定义</th>
+<th align="right">函数定义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">.class</td>
+<td align="center">.field public</td>
+<td align="right">.method</td>
+</tr>
+<tr>
+<td align="left">.super</td>
+<td align="center">.field static</td>
+<td align="right">instruction</td>
+</tr>
+<tr>
+<td align="left">.source</td>
+<td align="center">.field private</td>
+<td align="right">.endmethod</td>
+</tr>
+<tr>
+<td align="left"><a id="more"></a></td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">## 2 准备</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">Android studio（简称AS）</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">smalidea-0.05.zip(插件)</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">android killer(修改smali文件)</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">夜神模拟器</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">实验程序 crakme02.apk</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">### 2.1 修改AndroidManifest.xml</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">使用apktool.jar反编译apk。命令：java -jar apktool.jar d -f xxx.apk</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">会生成xxx文件夹。动态调试需要在AndroidManifest.xml添加可调试属性android:debuggable=”true”</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left"><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p1.jpg" alt="xml表"></td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">修改后同样使用apktool.jar进行回编译。命令：java -jar apktool.jar b -f xxx.apk（未签名）</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">打包后的apk并没有签名。可以使用jdk自带的keytool生成keystore,然后使用jarsigner进行签名。</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">以上过程可以使用一些工具来进行修改。反编译后的xxx文件夹是加载到android studio中的源代码。回编译的apk是安装在夜神模拟器中的。</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">### 2.2 AS安装smalidea插件</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">这里的smalidea-0.05.zip插件是下载好的。</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">依次点击File–&gt;setting–&gt;Plugins点击</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left"><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p2.jpg" alt="安装选取"></td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">从磁盘安装后点击apply–&gt;ok–&gt;重启即可</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="left">### 2.3 夜神模拟器连接DDMS</td>
+<td align="center"></td>
+<td align="right"></td>
+</tr>
+</tbody></table>
+<ol>
+<li>启动模拟器</li>
+<li>cd进入到夜神安装bin目录下，执行命令nox_adb.exe connect 127.0.0.1:62001</li>
+<li>如果命令执行错误。可能是nox_adb.exe版本不对，下载相应版本的替换即可。<br>我这里是配合了环境变量，并将nox_adb.exe connect 127.0.0.1:62001命令做成一个bat。直接运行图方便。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p4.jpg" alt="启动模拟器"><br><strong>模拟器启动后安装回编译并签名的apk</strong><h2 id="3-调试"><a href="#3-调试" class="headerlink" title="3 调试"></a>3 调试</h2><h3 id="3-1-导入源码"><a href="#3-1-导入源码" class="headerlink" title="3.1 导入源码"></a>3.1 导入源码</h3>将反编译的xxx文件夹加载到AS，类似加载一个安卓工程（导入….）界面如下:<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p5.jpg" alt="源码导入"><h3 id="3-2-设置远程调试"><a href="#3-2-设置远程调试" class="headerlink" title="3.2 设置远程调试"></a>3.2 设置远程调试</h3>打开AS，依次点击Run–&gt;edit configurations如图示：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p6.jpg" alt="配置远程调试"><br>点击+号，添加remote配置。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p7.jpg" alt="添加远程"><br>项目名字随便填，其余地方已用箭头标记<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p8.jpg" alt="配置端口"><h3 id="3-3-打开-Android-device-Monitor"><a href="#3-3-打开-Android-device-Monitor" class="headerlink" title="3.3 打开 Android device Monitor"></a>3.3 打开 Android device Monitor</h3><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p9.jpg" alt="打开ddms"><br>因为模拟器上没有运行什么应用，所以列表中并没有什么应用显示<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p10.jpg" alt="程序列表显示"><h3 id="3-4-下断点并开启调试"><a href="#3-4-下断点并开启调试" class="headerlink" title="3.4 下断点并开启调试"></a>3.4 下断点并开启调试</h3>这是一个检测输入是否正确的apk，所以断点就下到checkSN函数处，在代码最左边单击即可。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p11.jpg" alt="下调试断点"><br>打开cmd  输入 <code>adb shell am start -D -n com.droider.crackme0201/.MainActivity（包名/启动主activity）</code><br>然后模拟器会显示等待调试的弹出框<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p12.jpg" alt="启动调试"><br>接下来就是在AS中启动程序了Run—&gt;debug<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p13.jpg" alt="运行程序"><br>DDMS中也会显示调试程序包名<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p14.jpg" alt="ddms显示"><br>可以看到模拟器已经在程序中启动，而且ddms中红色的甲壳虫也变绿。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p15.png" alt="模拟器显示"><br>接下来我们随意输入，将程序停在所下断点处。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p16.png" alt="断点处"><br>可以看到断点已经停下。后续单步调试，查看变量等操作在这里就不介绍。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p17.png" alt="变量显示"><br>个人总结过程，仅供参考。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向技术</category>
+      </categories>
+      <tags>
+        <tag>Android</tag>
+        <tag>夜神模拟器</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>CVE-2011-0104漏洞分析</title>
     <url>/2018/07/25/CVE-2011-0104%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/</url>
     <content><![CDATA[<h2 id="漏洞描述"><a href="#漏洞描述" class="headerlink" title="漏洞描述"></a>漏洞描述</h2><blockquote>
